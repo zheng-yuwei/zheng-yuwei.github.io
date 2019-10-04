@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="车辆牌照的识别是基于图像分割和图像识别理论，对含有车辆号牌的图像进行分析处理， 从而确定牌照在图像中的位置，并进一步提取和识别出文本字符。 识别步骤概括为：车牌定位、车牌提取、字符识别。 三个步骤相辅相成，各自的有效性都较高，整体的识别率才会提高。">
+<meta name="keywords" content="车牌识别">
+<meta property="og:type" content="article">
+<meta property="og:title" content="车牌识别AI技术的思考">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2019/05/10/车牌识别AI技术的思考/index.html">
+<meta property="og:site_name" content="格物致知">
+<meta property="og:description" content="车辆牌照的识别是基于图像分割和图像识别理论，对含有车辆号牌的图像进行分析处理， 从而确定牌照在图像中的位置，并进一步提取和识别出文本字符。 识别步骤概括为：车牌定位、车牌提取、字符识别。 三个步骤相辅相成，各自的有效性都较高，整体的识别率才会提高。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/%E8%BD%A6%E7%89%8C%E8%AF%86%E5%88%ABAI%E6%8A%80%E6%9C%AF%E7%9A%84%E6%80%9D%E8%80%83/CNN_LSTM_CTC.png">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/%E8%BD%A6%E7%89%8C%E8%AF%86%E5%88%ABAI%E6%8A%80%E6%9C%AF%E7%9A%84%E6%80%9D%E8%80%83/multi_label_classification.png">
+<meta property="og:updated_time" content="2019-10-04T11:43:10.240Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="车牌识别AI技术的思考">
+<meta name="twitter:description" content="车辆牌照的识别是基于图像分割和图像识别理论，对含有车辆号牌的图像进行分析处理， 从而确定牌照在图像中的位置，并进一步提取和识别出文本字符。 识别步骤概括为：车牌定位、车牌提取、字符识别。 三个步骤相辅相成，各自的有效性都较高，整体的识别率才会提高。">
+<meta name="twitter:image" content="https://zheng-yuwei.github.io/images/%E8%BD%A6%E7%89%8C%E8%AF%86%E5%88%ABAI%E6%8A%80%E6%9C%AF%E7%9A%84%E6%80%9D%E8%80%83/CNN_LSTM_CTC.png">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2019/05/10/车牌识别AI技术的思考/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>车牌识别AI技术的思考 | 格物致知</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">格物致知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>搜索</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/zheng-yuwei" class="github-corner" title="More on GitHub" aria-label="More on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2019/05/10/车牌识别AI技术的思考/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郑煜伟">
+      <meta itemprop="description" content="好奇且热情">
+      <meta itemprop="image" content="/images/cat.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="格物致知">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">车牌识别AI技术的思考
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-10 10:43:56" itemprop="dateCreated datePublished" datetime="2019-05-10T10:43:56+08:00">2019-05-10</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-04 19:43:10" itemprop="dateModified" datetime="2019-10-04T19:43:10+08:00">2019-10-04</time>
+              </span>
+            
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>1.4k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>车辆牌照的识别是基于图像分割和图像识别理论，对含有车辆号牌的图像进行分析处理，
+从而确定牌照在图像中的位置，并进一步提取和识别出文本字符。</p>
+<p>识别步骤概括为：<strong>车牌定位、车牌提取、字符识别</strong>。
+三个步骤相辅相成，各自的有效性都较高，整体的识别率才会提高。</p>
+<a id="more"></a>
+<h2 id="车牌检测"><a href="#车牌检测" class="headerlink" title="车牌检测"></a>车牌检测</h2><p>主要分为2种技术方向来分析：</p>
+<ol>
+<li>回归框检测；</li>
+<li>关键点检测</li>
+</ol>
+<p>传统图像分割 基于边缘、颜色、形状特征，或使用HOG、LBP、Haar特征提取方法，
+受环境（亮度、对比度等）、场景影响严重，这里按下不表。</p>
+<h3 id="车牌检测：回归框"><a href="#车牌检测：回归框" class="headerlink" title="车牌检测：回归框"></a>车牌检测：回归框</h3><p><strong>单阶段目标检测</strong>：使用one-stage检测算法定位车牌。</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>框架简单；</li>
+<li>检测速度快，适用于多车牌。</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>受车牌角度影响严重，适用于角度变化不大的场景</li>
+</ul>
+</blockquote>
+<h3 id="车牌检测：关键点"><a href="#车牌检测：关键点" class="headerlink" title="车牌检测：关键点"></a>车牌检测：关键点</h3><p><strong>MTCNN</strong>：图像金字塔 + cascade CNN</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>整体模型小，存储及显存占用小；</li>
+<li>推理速度与车牌数量相关，车牌数量少时推理速度快；</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>受第一个阶段的影响，车牌的角度也受一定的限制（可设置H:W=1:3或3:5等），
+或者需要额外设计第一阶段的车牌recall方式；</li>
+<li>整个训练流程分为3个阶段，比较繁琐，特别需要联合调参以达到商业指标；</li>
+<li>需要支持batch推理模式，才能发挥出MTCNN的推理速度优势；</li>
+</ul>
+</blockquote>
+<p><strong>Deepercut/ Pose Residual Network/ OpenPose</strong>：全卷积得heatmap + 关键点归属</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>速度较快；</li>
+<li>不限车牌数；</li>
+<li>精度可以；</li>
+</ul>
+</blockquote>
+<p><strong>(Stack) Hourglass</strong>：Hourglass系列</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>可以与单阶段目标检测结合，加上关键点检测；也可直接作为端到端关键点检测（associative embedding）；</li>
+<li>检测精度高；</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>整体模型较大，速度慢；</li>
+<li>结构设计时，限定了检测的车牌数上限；</li>
+</ul>
+</blockquote>
+<p><strong>两阶段top-down关键点检测</strong>：检测算法+CNN/CPN/stack hourglass等</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>在多车牌场景下，可以获得高准确率及召回率；</li>
+<li>设计灵活；</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>没形成端到端模型，训练/优化麻烦；</li>
+</ul>
+</blockquote>
+<h3 id="车牌检测总结"><a href="#车牌检测总结" class="headerlink" title="车牌检测总结"></a>车牌检测总结</h3><ul>
+<li>具有极致的速度要求和角度较小的单一场景，可以考虑使用单阶段目标检测算法。</li>
+<li>若车牌角度变化大：则使用关键点检测算法；<ul>
+<li>若有速度要求，单车牌场景可考虑两阶段关键点检测，
+多车牌场景可考虑Deepercut、Pose Residual Network/openpose；</li>
+<li>若对算力约束不大，角度要求高，多车牌，则可考虑使用复杂二阶段关键点检测、stack hourglass变种等算法。</li>
+</ul>
+</li>
+</ul>
+<h2 id="车牌识别"><a href="#车牌识别" class="headerlink" title="车牌识别"></a>车牌识别</h2><p><strong>GRU/bi-LSTM + CNN + CTC Loss</strong>：</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>先验的空间分割（但对双层车牌，这个先验则变成劣势）</li>
+<li>空间上下文信息（这个信息较少，应该就只有两个：
+省份简称和首字母、剩余5位车牌中最多2位是字母）</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>中国车牌不同位置的字符具有不同取值集合，而RNN结构将这些值集放到一起进行预测，
+失去了不同位的值集先验，并且提升了类别失衡的风险；</li>
+<li>RNN结构使得推理最后分类部分有时序耦合作用，降低推理速度；</li>
+</ul>
+</blockquote>
+<p align="center">
+    <img src="https://zheng-yuwei.github.io/images/%E8%BD%A6%E7%89%8C%E8%AF%86%E5%88%ABAI%E6%8A%80%E6%9C%AF%E7%9A%84%E6%80%9D%E8%80%83/CNN_LSTM_CTC.png">
+</p>
+
+<p><strong>多标签多分类</strong>：</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>速度快；</li>
+<li>结构灵活</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>没有运用字符间的空间信息</li>
+</ul>
+</blockquote>
+<p align="center">
+    <img src="https://zheng-yuwei.github.io/images/%E8%BD%A6%E7%89%8C%E8%AF%86%E5%88%ABAI%E6%8A%80%E6%9C%AF%E7%9A%84%E6%80%9D%E8%80%83/multi_label_classification.png">
+</p>
+
+<h2 id="其他方案"><a href="#其他方案" class="headerlink" title="其他方案"></a>其他方案</h2><p><strong>检测与识别端到端优化（如CCPD论文）</strong>：</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>端到端训练与推理；</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>没法引入其他车牌进行车牌侧的优化；</li>
+<li>不算是主流方法，精度待验证；</li>
+</ul>
+</blockquote>
+<p><strong>检测+字符分割+识别</strong>：</p>
+<blockquote>
+<p>优势：</p>
+<ul>
+<li>复用不同位置的字符样本</li>
+<li>单字符识别更加容易</li>
+</ul>
+<p>不足：</p>
+<ul>
+<li>需要进行字符分割；</li>
+<li>多字符分别识别（也可作为batch），影响速度;</li>
+<li>类别失衡和位置集合信息丢失；</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div>给孩子买个糖果吧~</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.png" alt="郑煜伟 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.png" alt="郑煜伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/车牌识别/" rel="tag"># 车牌识别</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/04/25/Caffe使用的一些Q&A/" rel="next" title="Caffe使用的一些Q&A">
+                  <i class="fa fa-chevron-left"></i> Caffe使用的一些Q&A
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/07/08/GHM论文理解及实现/" rel="prev" title="GHM论文理解及实现">
+                  GHM论文理解及实现 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#车牌检测"><span class="nav-number">1.</span> <span class="nav-text">车牌检测</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#车牌检测：回归框"><span class="nav-number">1.1.</span> <span class="nav-text">车牌检测：回归框</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#车牌检测：关键点"><span class="nav-number">1.2.</span> <span class="nav-text">车牌检测：关键点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#车牌检测总结"><span class="nav-number">1.3.</span> <span class="nav-text">车牌检测总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#车牌识别"><span class="nav-number">2.</span> <span class="nav-text">车牌识别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他方案"><span class="nav-number">3.</span> <span class="nav-text">其他方案</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/cat.jpg"
+      alt="郑煜伟">
+  <p class="site-author-name" itemprop="name">郑煜伟</p>
+  <div class="site-description" itemprop="description">好奇且热情</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/zheng-yuwei" title="GitHub &rarr; https://github.com/zheng-yuwei" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:zheng.yuwei@foxmail.com" title="E-Mail &rarr; mailto:zheng.yuwei@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郑煜伟</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">44k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">40 分钟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
