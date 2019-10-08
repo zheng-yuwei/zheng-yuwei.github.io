@@ -253,10 +253,10 @@
         
           <div class="tag-cloud">
             <div class="tag-cloud-title">
-              目前共计 8 个标签
+              目前共计 10 个标签
             </div>
             <div class="tag-cloud-tags">
-              <a href="/tags/Caffe/" style="font-size: 30px; color: #111">Caffe</a> <a href="/tags/GHM/" style="font-size: 12px; color: #ccc">GHM</a> <a href="/tags/L2正则化/" style="font-size: 12px; color: #ccc">L2正则化</a> <a href="/tags/batch-normalizatin/" style="font-size: 12px; color: #ccc">batch normalizatin</a> <a href="/tags/docker/" style="font-size: 12px; color: #ccc">docker</a> <a href="/tags/warmup/" style="font-size: 12px; color: #ccc">warmup</a> <a href="/tags/损失函数/" style="font-size: 12px; color: #ccc">损失函数</a> <a href="/tags/车牌识别/" style="font-size: 12px; color: #ccc">车牌识别</a>
+              <a href="/tags/Caffe/" style="font-size: 30px; color: #111">Caffe</a> <a href="/tags/GHM/" style="font-size: 12px; color: #ccc">GHM</a> <a href="/tags/L2正则化/" style="font-size: 12px; color: #ccc">L2正则化</a> <a href="/tags/batch-normalizatin/" style="font-size: 12px; color: #ccc">batch normalizatin</a> <a href="/tags/docker/" style="font-size: 12px; color: #ccc">docker</a> <a href="/tags/network-pruning/" style="font-size: 12px; color: #ccc">network pruning</a> <a href="/tags/warm-up/" style="font-size: 12px; color: #ccc">warm-up</a> <a href="/tags/损失函数/" style="font-size: 12px; color: #ccc">损失函数</a> <a href="/tags/模型剪枝/" style="font-size: 12px; color: #ccc">模型剪枝</a> <a href="/tags/车牌识别/" style="font-size: 12px; color: #ccc">车牌识别</a>
             </div>
           </div>
         
@@ -275,6 +275,9 @@
 
           </div>
           
+    
+    <div class="comments" id="gitalk-container"></div>
+  
 
         </div>
           
@@ -323,7 +326,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -336,7 +339,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -391,12 +394,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">45k</span>
+    <span title="站点总字数">46k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">41 分钟</span>
+    <span title="站点阅读时长">42 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
@@ -448,6 +451,25 @@
 
 
 
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
 
 
 
@@ -461,6 +483,25 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: 'f47af1d1eda4d807b02bba32be15120b',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
 
 </body>
 </html>

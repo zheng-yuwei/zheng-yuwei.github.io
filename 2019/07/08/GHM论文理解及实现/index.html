@@ -458,8 +458,8 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/07/22/关于L2正则化和BN的讨论/" rel="prev" title="关于L2正则化和BN的讨论">
-                  关于L2正则化和BN的讨论 <i class="fa fa-chevron-right"></i>
+                <a href="/2019/07/22/对L2正则化、BN层的思考/" rel="prev" title="对L2正则化、BN层的思考">
+                  对L2正则化、BN层的思考 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -478,6 +478,9 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
 
           </div>
           
+    
+    <div class="comments" id="gitalk-container"></div>
+  
 
         </div>
           
@@ -528,7 +531,7 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -541,7 +544,7 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -596,12 +599,12 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">45k</span>
+    <span title="站点总字数">46k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">41 分钟</span>
+    <span title="站点阅读时长">42 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
@@ -653,6 +656,25 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
 
 
 
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
 
 
 
@@ -716,6 +738,25 @@ ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: '660517d2daa7b8fb31aeaa73cbb6e1dd',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
 
 </body>
 </html>

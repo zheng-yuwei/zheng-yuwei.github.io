@@ -238,7 +238,7 @@
         
           
         
-        <span class="collection-header">嗯..! 目前共计 6 篇日志。 继续努力。</span>
+        <span class="collection-header">嗯..! 目前共计 7 篇日志。 继续努力。</span>
       </div>
       
 
@@ -288,6 +288,35 @@
 
       <div class="post-meta">
         <time itemprop="dateCreated"
+              datetime="2019-07-26T10:13:21+08:00"
+              content="2019-07-26">
+          07-26
+        </time>
+      </div>
+
+      <h2 class="post-title">
+        
+          <a class="post-title-link" href="/2019/07/26/模型剪枝探索和实现小结/" itemprop="url">
+            <span itemprop="name">模型剪枝探索和实现小结</span>
+          </a>
+        
+      </h2>
+
+    </header>
+  </article>
+
+
+
+  
+  
+
+  
+
+  <article itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <div class="post-meta">
+        <time itemprop="dateCreated"
               datetime="2019-07-22T10:47:41+08:00"
               content="2019-07-22">
           07-22
@@ -296,8 +325,8 @@
 
       <h2 class="post-title">
         
-          <a class="post-title-link" href="/2019/07/22/关于L2正则化和BN的讨论/" itemprop="url">
-            <span itemprop="name">关于L2正则化和BN的讨论</span>
+          <a class="post-title-link" href="/2019/07/22/对L2正则化、BN层的思考/" itemprop="url">
+            <span itemprop="name">对L2正则化、BN层的思考</span>
           </a>
         
       </h2>
@@ -479,7 +508,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -492,7 +521,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -547,12 +576,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">45k</span>
+    <span title="站点总字数">46k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">41 分钟</span>
+    <span title="站点阅读时长">42 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
@@ -604,6 +633,25 @@
 
 
 
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
 
 
 
@@ -617,6 +665,7 @@
   
 
   
+
 
 </body>
 </html>
