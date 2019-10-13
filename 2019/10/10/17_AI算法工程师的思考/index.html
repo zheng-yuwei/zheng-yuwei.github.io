@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+<meta name="keywords" content="AI算法工程师,素养">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI算法工程师的思考">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2019/10/10/17_AI算法工程师的思考/index.html">
+<meta property="og:site_name" content="格物致知">
+<meta property="og:description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-13T03:14:19.807Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI算法工程师的思考">
+<meta name="twitter:description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2019/10/10/17_AI算法工程师的思考/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>AI算法工程师的思考 | 格物致知</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">格物致知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>搜索</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/zheng-yuwei" class="github-corner" title="More on GitHub" aria-label="More on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2019/10/10/17_AI算法工程师的思考/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郑煜伟">
+      <meta itemprop="description" content="好奇且热情">
+      <meta itemprop="image" content="/images/cat.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="格物致知">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">AI算法工程师的思考
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-10-10 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-10T00:00:00+08:00">2019-10-10</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-13 11:14:19" itemprop="dateModified" datetime="2019-10-13T11:14:19+08:00">2019-10-13</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>876</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。
+这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、
+项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。
+这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。</p>
+<a id="more"></a>
+<h3 id="AI算法工程师的素养"><a href="#AI算法工程师的素养" class="headerlink" title="AI算法工程师的素养"></a>AI算法工程师的素养</h3><p>说到软件工程师，说得更多的是代码素养，要做到设计良好、高可读、
+良好注释（代码自注释what，文字解释why，且注释随代码更新）、单一职责、
+最小知识、低耦合高内聚，等等；而AI算法工程师，我的理解则更多需要下面的能力素养。</p>
+<h4 id="抽象与定义问题的能力"><a href="#抽象与定义问题的能力" class="headerlink" title="抽象与定义问题的能力"></a>抽象与定义问题的能力</h4><p>李航的《统计学习方法》中，定义了统计学习的三要素：模型（假设空间）、
+策略（评价准则）、算法（优化步骤）。描述了应用算法解决问题时的三个重要关键点。
+这里的模型部分，和抽象与定义问题能力具有一致的目的：尝试建立出适用于问题的模型。</p>
+<p>在当前的AI实际应用中，问题的描述是比较高语义的智能应用场景，
+很多时候使用的是深度学习（不像统计学习、机器学习、概率统计等领域，
+具有强大的理论支撑），较难以理论分析不同的算法在最终应用效果上的差异
+（正向：问题到算法再到模型再到最终目标存在多种可能）；
+同时也难以从算法回头明确问题（反向：算法/模型回推问题归属领域）。
+所以，为了维护形成一个问题-&gt;实现-&gt;分析的优化迭代过程，必须不断的对问题进行抽象与定义。</p>
+<p>而抽象与定义问题的过程，个人认为需要注意以下三点：</p>
+<ol>
+<li>目标场景；</li>
+<li>问题边界/标准；</li>
+<li>可能的建模方式。</li>
+</ol>
+<h4 id="理解数据"><a href="#理解数据" class="headerlink" title="理解数据"></a>理解数据</h4><p>相比rule-driven或theory-driven，更多的是data-driven，
+观察数据，从数据本身出发，与抽象与定义问题形成反馈，获得更多的有用信息。
+场景拆分、细化，问题转移（传感器、语言或视觉？）</p>
+<h4 id="数据标注"><a href="#数据标注" class="headerlink" title="数据标注"></a>数据标注</h4><p>是否可标准，标注是否确切（半监督？弱标注？）</p>
+<h4 id="工程pipeline的建立"><a href="#工程pipeline的建立" class="headerlink" title="工程pipeline的建立"></a>工程pipeline的建立</h4><p>利于迭代验证</p>
+<h4 id="回溯与迭代"><a href="#回溯与迭代" class="headerlink" title="回溯与迭代"></a>回溯与迭代</h4><p>进一步定义问题，思考与优化，时间、空间、准确率等指标的trade off。</p>
+<h3 id="其他能力要求"><a href="#其他能力要求" class="headerlink" title="其他能力要求"></a>其他能力要求</h3><h4 id="论文阅读"><a href="#论文阅读" class="headerlink" title="论文阅读"></a>论文阅读</h4><p>思想的源泉，问题阻塞点解决的出路。</p>
+<h4 id="分享与讨论"><a href="#分享与讨论" class="headerlink" title="分享与讨论"></a>分享与讨论</h4><p>社区、同事</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div>感谢对原创的支持~</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.png" alt="郑煜伟 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.png" alt="郑煜伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/AI算法工程师/" rel="tag"># AI算法工程师</a>
+            
+              <a href="/tags/素养/" rel="tag"># 素养</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/07/30/16_Docker安装Caffe/" rel="next" title="Docker安装Caffe">
+                  <i class="fa fa-chevron-left"></i> Docker安装Caffe
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#AI算法工程师的素养"><span class="nav-number">1.</span> <span class="nav-text">AI算法工程师的素养</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#抽象与定义问题的能力"><span class="nav-number">1.1.</span> <span class="nav-text">抽象与定义问题的能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#理解数据"><span class="nav-number">1.2.</span> <span class="nav-text">理解数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据标注"><span class="nav-number">1.3.</span> <span class="nav-text">数据标注</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工程pipeline的建立"><span class="nav-number">1.4.</span> <span class="nav-text">工程pipeline的建立</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#回溯与迭代"><span class="nav-number">1.5.</span> <span class="nav-text">回溯与迭代</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他能力要求"><span class="nav-number">2.</span> <span class="nav-text">其他能力要求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#论文阅读"><span class="nav-number">2.1.</span> <span class="nav-text">论文阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分享与讨论"><span class="nav-number">2.2.</span> <span class="nav-text">分享与讨论</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/cat.jpg"
+      alt="郑煜伟">
+  <p class="site-author-name" itemprop="name">郑煜伟</p>
+  <div class="site-description" itemprop="description">好奇且热情</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/zheng-yuwei" title="GitHub &rarr; https://github.com/zheng-yuwei" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:zheng.yuwei@foxmail.com" title="E-Mail &rarr; mailto:zheng.yuwei@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郑煜伟</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">96k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:27</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+  
+    <span class="post-meta-divider">|</span>
+  
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: 'a172ad869dcdb9c716ea7b59f46dee38',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

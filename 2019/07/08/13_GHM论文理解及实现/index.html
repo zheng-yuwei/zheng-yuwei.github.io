@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="原论文：Gradient Harmonized Single-stage Detector 本文主要基于tf.keras讨论分类部分，论文也提出了适用于检测的方法。 实验表明具有一定效果，可以尝试，感觉比focal loss要好用。">
+<meta name="keywords" content="GHM,损失函数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GHM论文理解及实现">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2019/07/08/13_GHM论文理解及实现/index.html">
+<meta property="og:site_name" content="格物致知">
+<meta property="og:description" content="原论文：Gradient Harmonized Single-stage Detector 本文主要基于tf.keras讨论分类部分，论文也提出了适用于检测的方法。 实验表明具有一定效果，可以尝试，感觉比focal loss要好用。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/GHM%E8%AE%BA%E6%96%87%E7%90%86%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/GHM_insight.jpg">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/GHM%E8%AE%BA%E6%96%87%E7%90%86%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/regression_harmonized_gradient.png">
+<meta property="og:updated_time" content="2019-10-13T03:15:54.580Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GHM论文理解及实现">
+<meta name="twitter:description" content="原论文：Gradient Harmonized Single-stage Detector 本文主要基于tf.keras讨论分类部分，论文也提出了适用于检测的方法。 实验表明具有一定效果，可以尝试，感觉比focal loss要好用。">
+<meta name="twitter:image" content="https://zheng-yuwei.github.io/images/GHM%E8%AE%BA%E6%96%87%E7%90%86%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/GHM_insight.jpg">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2019/07/08/13_GHM论文理解及实现/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>GHM论文理解及实现 | 格物致知</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">格物致知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>搜索</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/zheng-yuwei" class="github-corner" title="More on GitHub" aria-label="More on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2019/07/08/13_GHM论文理解及实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郑煜伟">
+      <meta itemprop="description" content="好奇且热情">
+      <meta itemprop="image" content="/images/cat.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="格物致知">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">GHM论文理解及实现
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-08 00:00:00" itemprop="dateCreated datePublished" datetime="2019-07-08T00:00:00+08:00">2019-07-08</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-13 11:15:54" itemprop="dateModified" datetime="2019-10-13T11:15:54+08:00">2019-10-13</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>7k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>6 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>原论文：<a href="https://arxiv.org/abs/1811.05181" target="_blank" rel="noopener">Gradient Harmonized Single-stage Detector</a></p>
+<p>本文主要基于tf.keras讨论分类部分，论文也提出了适用于检测的方法。
+实验表明具有一定效果，可以尝试，感觉比<a href="https://arxiv.org/abs/1708.02002" target="_blank" rel="noopener">focal loss</a>要好用。</p>
+<a id="more"></a>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>本文针对问题：<strong>one-stage的目标检测算法一直存在的正负/难易样本（样本梯度）失衡问题</strong>。</p>
+<p>在one-stage算法中，负样本的数量要远远大于正样本，而且大多数负样本是简单样本（well-classified）；当然，大多正样本也算是简单样本。
+简单样本的小梯度，通过样本量的增加，量变引起质变，主导了模型的训练过程。
+focal loss中通过引入<script type="math/tex">\alpha</script>大大降低简单样本的分类损失，以平衡正负/难易样本，
+但是设计的损失函数<script type="math/tex">L</script>引入两个超参(OHEM只学习困难/loss大的一部分样本，训练有效性降低）：</p>
+<script type="math/tex; mode=display">
+L = - \sum_{i}^{c} ( \alpha * | p_{i} - p_{i}^{*} |^{\gamma} * p_{i}^{*} * \ln(p_{i}))</script><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">focal_loss</span><span class="params">(y_truth, y_pred, _)</span>:</span></span><br><span class="line">    epsilon = keras.backend.epsilon()</span><br><span class="line">    y_pred = keras.backend.clip(y_pred, epsilon, <span class="number">1.0</span> - epsilon)</span><br><span class="line">    cross_entropy = -y_truth * keras.backend.log(y_pred)</span><br><span class="line">    <span class="comment"># 这里没有区分正负样本的alpha</span></span><br><span class="line">    weight = alpha * keras.backend.pow(keras.backend.abs(y_truth - y_pred), gamma)</span><br><span class="line">    loss = weight * cross_entropy</span><br><span class="line">    loss = keras.backend.sum(loss, axis=<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">return</span> loss</span><br></pre></td></tr></table></figure>
+<p>本论文认为，模型训练过程中，信息/知识的传导靠的是梯度；只不过梯度的大小，表象刚好是样本的难易/正负。
+也就是说，正负/难易样本的失衡，其实是<strong>梯度的失衡</strong>！所以想让模型学得更好，应该从更本质的<strong>梯度</strong>入手。
+故提出gradient harmonizing mechanism（GHM），拟解决模型中的梯度失衡问题。</p>
+<h2 id="我的理解"><a href="#我的理解" class="headerlink" title="我的理解"></a>我的理解</h2><p>梯度调和机制（gradient harmonized mechanism， GHM）其实就是将不同梯度对损失函数的影响，进行基于密度的平衡。
+（如果为了简单了解，我们暂且可以把密度理解为样本数量）</p>
+<h3 id="调和机制（harmonized-mechanism）"><a href="#调和机制（harmonized-mechanism）" class="headerlink" title="调和机制（harmonized mechanism）"></a>调和机制（harmonized mechanism）</h3><p>这里把harmonized mechanism翻译为调和机制，其实是调和有取倒数的意思。</p>
+<h4 id="基于类别平衡的损失（class-balanced-loss）"><a href="#基于类别平衡的损失（class-balanced-loss）" class="headerlink" title="基于类别平衡的损失（class-balanced loss）"></a>基于类别平衡的损失（class-balanced loss）</h4><p>可以从样本的类别不平衡来理解：如果有10个类<script type="math/tex">A</script>的样本，2个类<script type="math/tex">B</script>的样本，
+那么基于类别平衡的损失为：</p>
+<script type="math/tex; mode=display">
+L = \frac{12}{10} * \sum_{i \in A}(L_{i}) + \frac{12}{2} * \sum_{i \in B}(L_{i})</script><p>其中，10可以理解为类别<script type="math/tex">A</script>的密度，2可以理解为类别<script type="math/tex">B</script>的密度。</p>
+<p>推广到多个类别可得：</p>
+<script type="math/tex; mode=display">
+L = \sum_{i}^{N}( \frac{N}{M_{i}} * L_{i} )</script><p>其中，<script type="math/tex">N</script>是样本总数，<script type="math/tex">M_{i}</script>是样本<script type="math/tex">i</script>所属的类别的密度，<script type="math/tex">L_{i}</script>是样本<script type="math/tex">i</script>的损失。
+以上如果取平均损失函数，则需要乘上<script type="math/tex">\frac{1}{N}</script>。</p>
+<h4 id="基于梯度平衡的损失（gradient-balanced-loss）"><a href="#基于梯度平衡的损失（gradient-balanced-loss）" class="headerlink" title="基于梯度平衡的损失（gradient-balanced loss）"></a>基于梯度平衡的损失（gradient-balanced loss）</h4><p>这里，我们将<strong>基于类别的平衡</strong>推广到<strong>基于梯度的平衡</strong>：</p>
+<script type="math/tex; mode=display">
+L = \sum_{i}^{N}( \frac{N}{GD_{g_{i}}} * L_{g_{i}} )</script><p>其中，<script type="math/tex">N</script>是样本总数，<script type="math/tex">g_{i}</script>是样本<script type="math/tex">i</script>的梯度，<script type="math/tex">GD_{g_{i}}</script>是梯度<script type="math/tex">g_{i}</script>的密度，<script type="math/tex">L_{g_{i}}=L_{i}</script>是样本<script type="math/tex">i</script>的损失。</p>
+<p>也就是说，用样本梯度的密度取倒数，乘上样本损失，便可以平衡不同梯度区域的损失。</p>
+<h3 id="为什么需要调和？"><a href="#为什么需要调和？" class="headerlink" title="为什么需要调和？"></a>为什么需要调和？</h3><p>基于类别的平衡，在实际的数据分析场景中，也要case-by-case分析是否适用。
+那么，<strong>基于梯度的平衡是否科学</strong>呢？作者给出了下图的解释（图中还包含了cross-entropy和focal-loss的梯度加和方式）：</p>
+<p align="center">
+    <img src="/images/GHM%E8%AE%BA%E6%96%87%E7%90%86%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/GHM_insight.jpg">
+</p>
+
+<p>最左边的图是样本的梯度分布，梯度小的表示已经被模型学习到的了（容易样本），梯度大的表示模型很难学到（困难样本）。
+这两种样本，梯度密度都比较大，主导了整个模型的训练方向。
+而作者认为，学到的了可以不用学了，没有学到的可能是异常样本，也不用学了；
+我们这时候应该提升模型，学习中间那段梯度密度较小、还有信息可以学习的样本。</p>
+<p>求解出整个样本集梯度的概率密度的调和曲线（1/概率密度，中间那张图），
+来调和原始的梯度（也就是与左图相乘），得到最终的模型回传梯度（最右边的图）。</p>
+<p>和focal loss和OHEM的比较来看，改进源于更本质的角度——模型的梯度
+（当然，这里的梯度并不是整个模型的所有参数<script type="math/tex">W</script>构成的梯度，
+而是简化为最后一层sigmoid回传的梯度；
+同时也不是指梯度向量，而是梯度向量的L1范数）。</p>
+<p>以上，便是论文的核心理解，接下来掰一掰公式和实现。</p>
+<h2 id="Gradient-Harmonizing-Mechanism-——-GHM-C-Loss"><a href="#Gradient-Harmonizing-Mechanism-——-GHM-C-Loss" class="headerlink" title="Gradient Harmonizing Mechanism —— GHM-C Loss"></a>Gradient Harmonizing Mechanism —— GHM-C Loss</h2><p>原论文主要针对的是sigmoid二分类情况，我泛化为softmax来分析。</p>
+<p>回过头来看一下GHM的损失函数为：</p>
+<script type="math/tex; mode=display">
+L = \frac{1}{K} * \sum_{i}^{K}( \frac{N}{GD_{g_{i}}} * L_{g_{i}} )</script><p>其中，<script type="math/tex">K</script>是batch size，最重要的部分在于求解<strong>梯度密度<script type="math/tex">GD_{g_{i}}</script></strong>上，
+论文通过两个机制来近似这个梯度密度：</p>
+<ol>
+<li>将梯度取值区间(0, 1)切割为多个bin，统计不同bin的梯度数量R，
+作为梯度密度（论文中梯度密度调和参数是
+<script type="math/tex">\beta_{i}=\frac{N}{GD_{g_{i}}},GD_{g_{i}}=\frac{R_{i}}{\epsilon},\epsilon=\frac{1}{bin}</script>）；</li>
+<li>用逐batch的指数加权移动平均(EMA)来近似总样本下的梯度密度
+<script type="math/tex">S_{i}^{t}=\alpha S_{i}^{t-1}+(1-\alpha)R_{i}^{t}</script>。</li>
+</ol>
+<p>cross-entropy的损失函数是：</p>
+<script type="math/tex; mode=display">
+L = -\sum_{i}^{c}(p_{i}^{*} * \ln(p_{i}))</script><p>其中，<script type="math/tex">p_{i}^{*}</script>指真实类别概率，预测类别概率为<script type="math/tex">p_{i}=\frac{e^{z_{i}}}{\sum_{j}e^{z_{j}}}</script>；
+ 代入计算梯度得 （与论文中针对sigmoid的推导结果是一致的）：</p>
+<script type="math/tex; mode=display">
+\frac{\partial L}{\partial x_{i}} = p_{i} - p_{i}^{*}</script><p> 综上，可得求解GHM-C Loss：</p>
+<ol>
+<li><script type="math/tex">|\frac{\partial L}{\partial x_{i}}| = |p_{i} - p_{i}^{*}|</script>；</li>
+<li>统计<script type="math/tex">R(g)</script>（<script type="math/tex">g=|p-p^{*}|</script> 所在梯度区间<script type="math/tex">[(i-1)*\epsilon, i*\epsilon]</script>的样本数）；</li>
+<li>指数加权移动平均计算<script type="math/tex">S(g)</script>；</li>
+<li>计算梯度密度 <script type="math/tex">GD(g) = \frac{S(g)}{\epsilon} = S(g) * M</script>；</li>
+<li>计算损失 <script type="math/tex">L = \sum_{i}(\frac{I(x_{i})}{GD(g_i)})</script>。</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_categorical_ghm_loss</span><span class="params">(bins=<span class="number">30</span>, momentum=<span class="number">0.75</span>)</span>:</span></span><br><span class="line">    <span class="string">""" 返回多分类 GHM 损失函数：</span></span><br><span class="line"><span class="string">            把每个区间上的梯度做平均，也就是说把梯度拉平，回推到公式上等价于把loss做平均</span></span><br><span class="line"><span class="string">    Formula:</span></span><br><span class="line"><span class="string">        loss = sum(crossentropy_loss(p_i,p*_i) / GD(g_i))</span></span><br><span class="line"><span class="string">        GD(g) = S_ind(g) / delta = S_ind(g) * M</span></span><br><span class="line"><span class="string">        S_ind(g) = momentum * S_ind(g) + (1 - momentum) * R_ind(g)</span></span><br><span class="line"><span class="string">        R_ind(g)是 g=|p-p*| 所在梯度区间[(i-1)delta, i*delta]的样本数</span></span><br><span class="line"><span class="string">        M = 1/delta，这个是个常数，理论上去掉只有步长影响</span></span><br><span class="line"><span class="string">    Parameters: （论文默认）</span></span><br><span class="line"><span class="string">        bins -- 区间个数，default 30</span></span><br><span class="line"><span class="string">        momentum -- 使用移动平均来求区间内样本数，动量部分系数，论文说不敏感</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="comment"># 区间边界</span></span><br><span class="line">    edges = np.array([i/bins <span class="keyword">for</span> i <span class="keyword">in</span> range(bins + <span class="number">1</span>)])</span><br><span class="line">    edges = np.expand_dims(np.expand_dims(edges, axis=<span class="number">-1</span>), axis=<span class="number">-1</span>)</span><br><span class="line">    acc_sum = <span class="number">0</span></span><br><span class="line">    <span class="keyword">if</span> momentum &gt; <span class="number">0</span>:</span><br><span class="line">        acc_sum = tf.zeros(shape=(bins,), dtype=tf.float32)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">ghm_class_loss</span><span class="params">(y_truth, y_pred, valid_mask)</span>:</span></span><br><span class="line">        epsilon = keras.backend.epsilon()</span><br><span class="line">        y_pred = keras.backend.clip(y_pred, epsilon, <span class="number">1.0</span> - epsilon)</span><br><span class="line">        <span class="comment"># 0. 计算本次mini-batch的梯度分布：R_ind(g)</span></span><br><span class="line">        gradient = keras.backend.abs(y_truth - y_pred)</span><br><span class="line">        <span class="comment"># 获取概率最大的类别下标，将该类别的梯度做为该标签的梯度代表</span></span><br><span class="line">        <span class="comment"># 没有这部分就是每个类别的梯度都参与到GHM，实验表明没有这部分会更好些</span></span><br><span class="line">        <span class="comment"># truth_indices_1 = keras.backend.expand_dims(keras.backend.argmax(y_truth, axis=1))</span></span><br><span class="line">        <span class="comment"># truth_indices_0 = keras.backend.expand_dims(keras.backend.arange(start=0,</span></span><br><span class="line">        <span class="comment">#                                                                  stop=tf.shape(y_pred)[0],</span></span><br><span class="line">        <span class="comment">#                                                                  step=1, dtype='int64'))</span></span><br><span class="line">        <span class="comment"># truth_indices = keras.backend.concatenate([truth_indices_0, truth_indices_1])</span></span><br><span class="line">        <span class="comment"># main_gradient = tf.gather_nd(gradient, truth_indices)</span></span><br><span class="line">        <span class="comment"># gradient = tf.tile(tf.expand_dims(main_gradient, axis=-1), [1, y_pred.shape[1]])</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 求解各个梯度所在的区间，并落到对应区间内进行密度计数</span></span><br><span class="line">        grads_bin = tf.logical_and(tf.greater_equal(gradient, edges[:<span class="number">-1</span>, :, :]), tf.less(gradient, edges[<span class="number">1</span>:, :, :]))</span><br><span class="line">        valid_bin = tf.boolean_mask(grads_bin, valid_mask, name=<span class="string">'valid_gradient'</span>, axis=<span class="number">1</span>)</span><br><span class="line">        valid_bin = tf.reduce_sum(tf.cast(valid_bin, dtype=tf.float32), axis=(<span class="number">1</span>, <span class="number">2</span>))</span><br><span class="line">        <span class="comment"># 2. 更新指数移动平均后的梯度分布：S_ind(g)</span></span><br><span class="line">        <span class="keyword">nonlocal</span> acc_sum</span><br><span class="line">        acc_sum = tf.add(momentum * acc_sum, (<span class="number">1</span> - momentum) * valid_bin, name=<span class="string">'update_bin_number'</span>)</span><br><span class="line">        <span class="comment"># sample_num = tf.reduce_sum(acc_sum)  # 是否乘以总数，乘上效果反而变差了</span></span><br><span class="line">        <span class="comment"># 3. 计算本次mini-batch不同loss对应的梯度密度：GD(g)</span></span><br><span class="line">        position = tf.slice(tf.where(grads_bin), [<span class="number">0</span>, <span class="number">1</span>], [<span class="number">-1</span>, <span class="number">2</span>])</span><br><span class="line">        value = tf.gather_nd(acc_sum, tf.slice(tf.where(grads_bin), [<span class="number">0</span>, <span class="number">0</span>], [<span class="number">-1</span>, <span class="number">1</span>]))  <span class="comment"># * bins</span></span><br><span class="line">        grad_density = tf.sparse.SparseTensor(indices=position, values=value,</span><br><span class="line">                                              dense_shape=tf.shape(gradient, out_type=tf.int64))</span><br><span class="line">        grad_density = tf.sparse.to_dense(grad_density, validate_indices=<span class="literal">False</span>)</span><br><span class="line">        grad_density = grad_density * tf.expand_dims(valid_mask, <span class="number">-1</span>) + (<span class="number">1</span> - tf.expand_dims(valid_mask, <span class="number">-1</span>))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 4. 计算本次mini-batch不同样本的损失：loss</span></span><br><span class="line">        cross_entropy = -y_truth * keras.backend.log(y_pred)</span><br><span class="line">        <span class="comment"># loss = cross_entropy / grad_density * sample_num</span></span><br><span class="line">        loss = cross_entropy / grad_density</span><br><span class="line">        loss = keras.backend.sum(loss, axis=<span class="number">1</span>)</span><br><span class="line">        <span class="string">"""</span></span><br><span class="line"><span class="string">        # 调试用，打印tensor</span></span><br><span class="line"><span class="string">        print_op = tf.print('acc_sum: ', acc_sum, '\n',</span></span><br><span class="line"><span class="string">                            'grad_density: ', grad_density, '\n',</span></span><br><span class="line"><span class="string">                            'cross_entropy: ', cross_entropy, '\n',</span></span><br><span class="line"><span class="string">                            'loss:', loss, '\n',</span></span><br><span class="line"><span class="string">                            '\n',</span></span><br><span class="line"><span class="string">                            '=================================================\n',</span></span><br><span class="line"><span class="string">                            summarize=100)</span></span><br><span class="line"><span class="string">        with tf.control_dependencies([print_op]):</span></span><br><span class="line"><span class="string">            return tf.identity(loss)</span></span><br><span class="line"><span class="string">        """</span></span><br><span class="line">        <span class="keyword">return</span> loss</span><br><span class="line">    <span class="keyword">return</span> ghm_class_loss</span><br></pre></td></tr></table></figure>
+<h2 id="Gradient-Harmonizing-Mechanism-——-GHM-R-Loss"><a href="#Gradient-Harmonizing-Mechanism-——-GHM-R-Loss" class="headerlink" title="Gradient Harmonizing Mechanism —— GHM-R Loss"></a>Gradient Harmonizing Mechanism —— GHM-R Loss</h2><p>一般的回归损失是：</p>
+<script type="math/tex; mode=display">
+SL_{1}(d) =
+\left\{\begin{matrix}
+\frac{d^{2}}{2\delta} & if  |d| <= \delta \\
+|d| - \frac{\delta}{2} & otherwise
+\end{matrix}\right.</script><p>这样得到的梯度为：</p>
+<script type="math/tex; mode=display">
+\frac{\partial SL_{1}}{\partial d} =
+\left\{\begin{matrix}
+\frac{d}{\delta} & if \; |d| <= \delta \\
+sgn(d) & otherwise
+\end{matrix}\right.
+\Rightarrow   \vee |d| > \delta, |\frac{\partial SL_{1}}{\partial d}| = 1</script><p>由于大部分为梯度为1，没法计算梯度密度。故改进回归损失为：</p>
+<script type="math/tex; mode=display">
+ASL_{1}(d) = \sqrt{(d^{2} + \mu_{2})} - \mu
+\Rightarrow
+\frac{\partial ASL_{1}(d)}{\partial d} = \frac{d}{\sqrt{(d^{2} + \mu_{2})}}</script><p>然后按照 GHM-C Loss 的步骤计算 GHM-R Loss即可（按经验<script type="math/tex">u=0.02</script>）。</p>
+<p align="center">
+    <img src="/images/GHM%E8%AE%BA%E6%96%87%E7%90%86%E8%A7%A3%E5%8F%8A%E5%AE%9E%E7%8E%B0/regression_harmonized_gradient.png">
+</p>
+
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div>感谢对原创的支持~</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.png" alt="郑煜伟 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.png" alt="郑煜伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/GHM/" rel="tag"># GHM</a>
+            
+              <a href="/tags/损失函数/" rel="tag"># 损失函数</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/05/10/12_车牌识别AI技术的思考/" rel="next" title="车牌识别AI技术的思考">
+                  <i class="fa fa-chevron-left"></i> 车牌识别AI技术的思考
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/07/22/14_对L2正则化、BN层的思考/" rel="prev" title="对L2正则化、BN层的思考">
+                  对L2正则化、BN层的思考 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#我的理解"><span class="nav-number">2.</span> <span class="nav-text">我的理解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调和机制（harmonized-mechanism）"><span class="nav-number">2.1.</span> <span class="nav-text">调和机制（harmonized mechanism）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#基于类别平衡的损失（class-balanced-loss）"><span class="nav-number">2.1.1.</span> <span class="nav-text">基于类别平衡的损失（class-balanced loss）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于梯度平衡的损失（gradient-balanced-loss）"><span class="nav-number">2.1.2.</span> <span class="nav-text">基于梯度平衡的损失（gradient-balanced loss）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么需要调和？"><span class="nav-number">2.2.</span> <span class="nav-text">为什么需要调和？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gradient-Harmonizing-Mechanism-——-GHM-C-Loss"><span class="nav-number">3.</span> <span class="nav-text">Gradient Harmonizing Mechanism —— GHM-C Loss</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gradient-Harmonizing-Mechanism-——-GHM-R-Loss"><span class="nav-number">4.</span> <span class="nav-text">Gradient Harmonizing Mechanism —— GHM-R Loss</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/cat.jpg"
+      alt="郑煜伟">
+  <p class="site-author-name" itemprop="name">郑煜伟</p>
+  <div class="site-description" itemprop="description">好奇且热情</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/zheng-yuwei" title="GitHub &rarr; https://github.com/zheng-yuwei" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:zheng.yuwei@foxmail.com" title="E-Mail &rarr; mailto:zheng.yuwei@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郑煜伟</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">96k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:27</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+  
+    <span class="post-meta-divider">|</span>
+  
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: 'c2528325ae15264f03dac799ec82ea4e',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

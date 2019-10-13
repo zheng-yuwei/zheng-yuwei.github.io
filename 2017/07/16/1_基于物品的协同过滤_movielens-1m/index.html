@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="对基于物品的协同过滤理解和复现的一点记录。">
+<meta name="keywords" content="协同过滤">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于物品的协同过滤">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2017/07/16/1_基于物品的协同过滤_movielens-1m/index.html">
+<meta property="og:site_name" content="格物致知">
+<meta property="og:description" content="对基于物品的协同过滤理解和复现的一点记录。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-13T04:01:41.185Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于物品的协同过滤">
+<meta name="twitter:description" content="对基于物品的协同过滤理解和复现的一点记录。">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2017/07/16/1_基于物品的协同过滤_movielens-1m/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>基于物品的协同过滤 | 格物致知</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">格物致知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>搜索</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/zheng-yuwei" class="github-corner" title="More on GitHub" aria-label="More on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2017/07/16/1_基于物品的协同过滤_movielens-1m/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郑煜伟">
+      <meta itemprop="description" content="好奇且热情">
+      <meta itemprop="image" content="/images/cat.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="格物致知">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">基于物品的协同过滤
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-07-16 00:00:00" itemprop="dateCreated datePublished" datetime="2017-07-16T00:00:00+08:00">2017-07-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-13 12:01:41" itemprop="dateModified" datetime="2019-10-13T12:01:41+08:00">2019-10-13</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>17k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>15 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p align="center">
+对<strong>基于物品的协同过滤</strong>理解和复现的一点记录。
+</p>
+
+<a id="more"></a>
+<h3 id="程序入口"><a href="#程序入口" class="headerlink" title="程序入口"></a>程序入口</h3><ul>
+<li>日志对象；</li>
+<li>读取数据/分割数据集；</li>
+<li>创建推荐算法对象/初始化参数；</li>
+<li>计算相似度矩阵；</li>
+<li>预测评分并推荐；</li>
+<li>评价指标计算。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> logger <span class="keyword">import</span> Logger</span><br><span class="line"><span class="keyword">from</span> movielens <span class="keyword">import</span> RatingData</span><br><span class="line"><span class="keyword">from</span> cf <span class="keyword">import</span> CF</span><br><span class="line"><span class="keyword">from</span> similarity <span class="keyword">import</span> Similarity</span><br><span class="line"></span><br><span class="line"><span class="string">''' 基于kNN-CF推荐算法的流程 '''</span></span><br><span class="line"><span class="comment"># 日志打印对象</span></span><br><span class="line">logPath = os.path.join(<span class="string">'logs'</span>, <span class="string">'kNNCF.log'</span>)</span><br><span class="line">logger = Logger.getLogger(logPath)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 读取数据</span></span><br><span class="line">ratingfile = os.path.join(<span class="string">'ml-1m'</span>, <span class="string">'ratings.dat'</span>)</span><br><span class="line">proportion = <span class="number">0.7</span>        <span class="comment"># 训练集占总数据集比例，其余为测试集</span></span><br><span class="line"><span class="comment"># 基于item</span></span><br><span class="line">itemRatingDict = RatingData.getItemRatingDict(logger, ratingfile, proportion)</span><br><span class="line">itemTrainset = itemRatingDict[RatingData.TRAIN_SET_KEY]</span><br><span class="line">itemTestset = itemRatingDict[RatingData.TEST_SET_KEY]</span><br><span class="line"><span class="comment"># 计算相似度矩阵，并推荐</span></span><br><span class="line">cfAlgo = CF(logger, itemTrainset, itemTestset, neighborK=<span class="number">20</span>, topN=<span class="number">10</span>)</span><br><span class="line">cfAlgo.calcSimMat(Similarity.rateDiffDivCoRated)</span><br><span class="line">cfAlgo.recommand()</span><br><span class="line"><span class="comment"># 评价</span></span><br><span class="line">cfAlgo.evaluate()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 播放完成音乐</span></span><br><span class="line"><span class="comment">#from playsound import playsound</span></span><br><span class="line"><span class="comment">#playsound('C:/Users/Public/Music/Sample Music/Sleep Away.mp3') # 无法设置播放时间</span></span><br><span class="line"><span class="keyword">import</span> winsound</span><br><span class="line">winsound.Beep(<span class="number">500</span>, <span class="number">500</span>) <span class="comment"># 不好听</span></span><br></pre></td></tr></table></figure>
+<h3 id="各个模块"><a href="#各个模块" class="headerlink" title="各个模块"></a>各个模块</h3><h4 id="日志模块-logger-py"><a href="#日志模块-logger-py" class="headerlink" title="日志模块 logger.py"></a>日志模块 logger.py</h4><p>打印到控制台，同时也可以记录到 logPath 路径下的文件中。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Logger</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">''' 日志记录类，记录到目录路径文件内，同时也打印到console上 '''</span></span><br><span class="line">    __logger = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__initLogger</span><span class="params">(logPath, logLevel)</span>:</span></span><br><span class="line">        <span class="string">''' 创建日志对象，并放入到__logger字典。key为logPath，value为logger对象</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            logPath:日志文件路径</span></span><br><span class="line"><span class="string">            logLevel:日志打印水平</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="comment"># 设置日志记录等级、格式、文件</span></span><br><span class="line">        logger = logging.getLogger(logPath)</span><br><span class="line">        logger.setLevel(logLevel)</span><br><span class="line">        <span class="comment"># Formatter - 格式</span></span><br><span class="line">        formatter = logging.Formatter(<span class="string">r'%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s'</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Console - 控制台就打印debug</span></span><br><span class="line">        consoleHandler = logging.StreamHandler()</span><br><span class="line">        consoleHandler.setLevel(logLevel)</span><br><span class="line">        consoleHandler.setFormatter(formatter)</span><br><span class="line">        <span class="comment"># 文件 - 文件就记录error</span></span><br><span class="line">        fileHandler = logging.FileHandler(logPath, mode=<span class="string">'w'</span>, encoding=<span class="string">'UTF-8'</span>)</span><br><span class="line">        fileHandler.setLevel(logLevel)</span><br><span class="line">        fileHandler.setFormatter(formatter)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 添加句柄</span></span><br><span class="line">        logger.addHandler(consoleHandler)</span><br><span class="line">        logger.addHandler(fileHandler)</span><br><span class="line">        logger.info(<span class="string">'创建日志文件&#123;logfile&#125;成功！'</span>.format(logfile=logPath))</span><br><span class="line">        Logger.__logger[logPath] = logger</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">getLogger</span><span class="params">(logPath, logLevel=logging.DEBUG)</span>:</span></span><br><span class="line">        <span class="string">''' 从__logger字典获取日志对象，key为logPath。若logger对象不存在，则新建</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            logPath:日志文件路径</span></span><br><span class="line"><span class="string">            logLevel:日志打印水平，默认打印debug等级及以上</span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            logger日志打印对象</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="keyword">if</span> Logger.__logger.get(logPath) == <span class="literal">None</span>:</span><br><span class="line">            Logger.__initLogger(logPath, logLevel)</span><br><span class="line">        <span class="keyword">return</span> Logger.__logger.get(logPath)</span><br></pre></td></tr></table></figure>
+<p><strong>Question</strong>：如果出现日志打印多次的情况（logger.info(‘1’)但是打印了两次1），
+是因为程序异常停止，导致自己创建的logger对象会被回收，但是logging.getLogger创建的对象依然存在，
+若此时再次创建重名的logging.getLogger对象，则会重复添加打印通道的句柄，
+导致多处打印（因为logging.getLogger(name)是对name的单例模式）。</p>
+<p><strong>解决</strong>：出现异常了，给换个名字创建日志对象，或者，quit()重启console就行，或者，运行下面语句：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">from</span> imp <span class="keyword">import</span> reload</span><br><span class="line">reload(logging)</span><br></pre></td></tr></table></figure>
+<h4 id="数据加载模块-movielens-py"><a href="#数据加载模块-movielens-py" class="headerlink" title="数据加载模块 movielens.py"></a>数据加载模块 movielens.py</h4><p>用字典变量存储，类似<code>ratesDict[item][user] = rate</code>。然后按设定比例、随机种子，分割训练集和测试集。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> random <span class="keyword">as</span> rand</span><br><span class="line">rand.seed(<span class="number">0</span>)</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RatingData</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">''' movielens的rating.dat的数据集处理类 '''</span></span><br><span class="line"></span><br><span class="line">    TRAIN_SET_KEY = <span class="string">'trainset'</span></span><br><span class="line">    TEST_SET_KEY = <span class="string">'testset'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__loadFile</span><span class="params">(filepath, logger)</span>:</span></span><br><span class="line">        <span class="string">''' 加载数据文件，返回生成器。</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            filepath:数据文件的路径</span></span><br><span class="line"><span class="string">            logger:日志记录对象</span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            数据文件中，每次按序返回一行数据的迭代器</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="keyword">with</span> open(filepath, <span class="string">'r'</span>, encoding=<span class="string">'UTF-8'</span>) <span class="keyword">as</span> fp:</span><br><span class="line">            <span class="keyword">for</span> i, line <span class="keyword">in</span> enumerate(fp):</span><br><span class="line">                <span class="keyword">yield</span> line.strip(<span class="string">'\r\n'</span>)</span><br><span class="line">                <span class="keyword">if</span> i % <span class="number">100000</span> == <span class="number">0</span>:</span><br><span class="line">                    logger.info(<span class="string">'加载数据文件生成器 &#123;filepath&#125;(&#123;rowNum&#125;)'</span>.format(filepath=filepath, rowNum=i))</span><br><span class="line">        logger.info(<span class="string">'加载数据文件 &#123;filepath&#125; 成功'</span>.format(filepath=filepath))</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">getItemRatingDict</span><span class="params">(logger, filepath, proportion)</span>:</span></span><br><span class="line">        <span class="string">''' 加载评分数据字典对象，划分为训练集和测试集</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            logger:日志记录对象</span></span><br><span class="line"><span class="string">            filepath:数据文件的路径</span></span><br><span class="line"><span class="string">            proportion:数据集训练集的划分比例，剩余的作为测试集</span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            包含trainset和testset的字典对象</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        trainset = &#123;&#125;</span><br><span class="line">        trainsetSize = <span class="number">0</span></span><br><span class="line">        testset = &#123;&#125;</span><br><span class="line">        testsetSize = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> RatingData.__loadFile(filepath, logger):</span><br><span class="line">            user, item, rating, _ = line.split(<span class="string">'::'</span>)    <span class="comment"># 数据格式是：用户::电影::评分::时间戳</span></span><br><span class="line">            user = int(user)</span><br><span class="line">            item = int(item)</span><br><span class="line">            rating = float(rating)</span><br><span class="line">            <span class="comment"># 通过比例划分数据集</span></span><br><span class="line">            <span class="keyword">if</span> rand.random() &lt; proportion:</span><br><span class="line">                trainset.setdefault(item, &#123;&#125;)</span><br><span class="line">                trainset[item][user] = rating</span><br><span class="line">                trainsetSize += <span class="number">1</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                testset.setdefault(item, &#123;&#125;)</span><br><span class="line">                testset[item][user] = rating</span><br><span class="line">                testsetSize += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">        logger.info(<span class="string">'划分训练集和测试集成功！'</span>)</span><br><span class="line">        logger.info(<span class="string">'训练集物品数量 &#123;item&#125;'</span>.format(item = len(trainset)))</span><br><span class="line">        logger.info(<span class="string">'训练集大小 &#123;size&#125;'</span>.format(size=trainsetSize))</span><br><span class="line">        logger.info(<span class="string">'测试集物品数量 &#123;item&#125;'</span>.format(item = len(testset)))</span><br><span class="line">        logger.info(<span class="string">'测试集大小 &#123;size&#125;'</span>.format(size=testsetSize))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> &#123;RatingData.TRAIN_SET_KEY:trainset, RatingData.TEST_SET_KEY:testset&#125;</span><br></pre></td></tr></table></figure>
+<p>一个良好的实践就是：总是<strong>先用较小的数据集</strong>测试功能、性能；
+针对到movielens 1m数据集，原来大概是<code>3000+ item * 6000+ user</code>，相似度计算就大概<code>O(3000 * 3000 * 6000)</code>时间复杂度；
+把数据集缩小为 1000item * 2000 user，时间复杂度可是蹭蹭蹭的降下来了。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@staticmethod</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getSmallRatingData</span><span class="params">(logger, filepath, proportion=<span class="number">0.7</span>, ratio=<span class="number">0.3</span>, transport=False)</span>:</span></span><br><span class="line">    <span class="string">''' 加载评分数据字典对象，划分为训练集和测试集</span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        logger:日志记录对象</span></span><br><span class="line"><span class="string">        filepath:数据文件的路径</span></span><br><span class="line"><span class="string">        proportion:数据集训练集的划分比例，剩余的作为测试集</span></span><br><span class="line"><span class="string">        ratio:缩小为原数据集的比例数</span></span><br><span class="line"><span class="string">        transport:是否将数据集转置，未转置是user-item，转置则是item-user</span></span><br><span class="line"><span class="string">    Returns:</span></span><br><span class="line"><span class="string">        包含trainset和testset的字典对象</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line">    <span class="comment"># 获取原数据集</span></span><br><span class="line">    dataset = RatingData.getRatingDict(logger, filepath, proportion, transport)</span><br><span class="line">    trainset = dataset[RatingData.TRAIN_SET_KEY]</span><br><span class="line">    testset = dataset[RatingData.TEST_SET_KEY]</span><br><span class="line">    <span class="comment"># 获取用户集、物品集</span></span><br><span class="line">    userset = set(trainset.keys())</span><br><span class="line">    itemset = set()</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> userset:</span><br><span class="line">        itemset |= set(trainset[user].keys())</span><br><span class="line">    <span class="comment"># 缩小用户集、物品集</span></span><br><span class="line">    smallUserset = set()</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> userset:</span><br><span class="line">        <span class="keyword">if</span> rand.random() &lt; ratio:</span><br><span class="line">            smallUserset.add(user)</span><br><span class="line">    smallItemset = set()</span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> itemset:</span><br><span class="line">        <span class="keyword">if</span> rand.random() &lt; ratio:</span><br><span class="line">            smallItemset.add(item)</span><br><span class="line">    <span class="comment"># 将训练集数据，限制在缩小的用户、物品集内</span></span><br><span class="line">    smallTrainset = &#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> smallUserset:</span><br><span class="line">        smallTrainset[user] = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> trainset[user].keys():</span><br><span class="line">            <span class="keyword">if</span> item <span class="keyword">not</span> <span class="keyword">in</span> smallItemset:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            smallTrainset[user][item] = trainset[user][item]</span><br><span class="line">    <span class="comment"># 将测试集数据，限制在缩小的用户、物品集内</span></span><br><span class="line">    smallTestset = &#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> smallUserset:</span><br><span class="line">        smallTestset[user] = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> testset[user].keys():</span><br><span class="line">            <span class="keyword">if</span> item <span class="keyword">not</span> <span class="keyword">in</span> smallItemset:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            smallTestset[user][item] = testset[user][item]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> transport:</span><br><span class="line">        dimA = <span class="string">'电影'</span></span><br><span class="line">        dimB = <span class="string">'用户'</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        dimA = <span class="string">'用户'</span></span><br><span class="line">        dimB = <span class="string">'电影'</span></span><br><span class="line">    logger.info(<span class="string">'原数据集[&#123;dimA&#125;*&#123;dimB&#125;]大小：[&#123;lenA&#125;*&#123;lenB&#125;]'</span>.format(dimA=dimA,</span><br><span class="line">                dimB=dimB, lenA=len(userset), lenB=len(itemset)))</span><br><span class="line">    logger.info(<span class="string">'收缩数据集[&#123;dimA&#125;*&#123;dimB&#125;]大小：[&#123;lenA&#125;*&#123;lenB&#125;]'</span>.format(dimA=dimA,</span><br><span class="line">                dimB=dimB, lenA=len(smallUserset), lenB=len(smallItemset)))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;RatingData.TRAIN_SET_KEY:smallTrainset, RatingData.TEST_SET_KEY:smallTestset&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="相似度函数模块-similarity-py"><a href="#相似度函数模块-similarity-py" class="headerlink" title="相似度函数模块 similarity.py"></a>相似度函数模块 similarity.py</h4><p>提供相似度计算的函数，这里写了3个相似度度量函数：共现、LiRa、自己推的。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> warnings</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Similarity</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">''' 相似度计算工具类 '''</span></span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">coOccurSim</span><span class="params">(a, b)</span>:</span></span><br><span class="line">        <span class="string">''' 向量a,b的共现相似度，有点类似于关联分析</span></span><br><span class="line"><span class="string">        sim = count(a and b) / sqrt(count(a) * count(b))</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="comment"># 取评分用户的交集</span></span><br><span class="line">        setA = set(a.keys())</span><br><span class="line">        setB = set(b.keys())</span><br><span class="line">        users = setA &amp; setB</span><br><span class="line">        coOccur = len(users)</span><br><span class="line">        <span class="comment"># 若物品没有评分用户交集，则说明没有相似性</span></span><br><span class="line">        <span class="keyword">if</span> coOccur == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 统计评分共现项</span></span><br><span class="line">        occurA = len(setA)</span><br><span class="line">        occurB = len(setB)</span><br><span class="line">        <span class="comment"># 计算共现相似度</span></span><br><span class="line">        sim = coOccur / np.sqrt(occurA * occurB)</span><br><span class="line">        <span class="keyword">return</span> sim</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">liRa</span><span class="params">(a, b)</span>:</span></span><br><span class="line">        <span class="string">''' LiRa评分</span></span><br><span class="line"><span class="string">        sim = log_10(p1/p2)</span></span><br><span class="line"><span class="string">        p1 = cum(power(1/2, dist+1))</span></span><br><span class="line"><span class="string">        p2 = cum(p(coOccur))</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="comment"># 取评分用户的交集</span></span><br><span class="line">        users = set(a.keys()) &amp; set(b.keys())</span><br><span class="line">        <span class="comment"># 若物品没有评分用户交集，则说明没有相似性</span></span><br><span class="line">        <span class="keyword">if</span> len(users) == <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        p1 = <span class="number">1</span></span><br><span class="line">        p2 = <span class="number">1</span></span><br><span class="line">        sim = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">            <span class="keyword">if</span> np.abs(a[user] - b[user]) == <span class="number">4</span>:</span><br><span class="line">                p1 = np.power(<span class="number">1</span>/<span class="number">2</span>, np.abs(a[user] - b[user]))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                p1 = np.power(<span class="number">1</span>/<span class="number">2</span>, np.abs(a[user] - b[user]) + <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> np.abs(a[user] - b[user]) == <span class="number">0</span>:</span><br><span class="line">                p2 = <span class="number">1</span>/<span class="number">5</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                p2 = <span class="number">2</span> * (<span class="number">5</span> - np.abs(a[user] - b[user])) / <span class="number">25</span></span><br><span class="line"></span><br><span class="line">            sim += np.log10(p1/p2)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> sim</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">rateDiffDivCoRated</span><span class="params">(a, b)</span>:</span></span><br><span class="line">        <span class="string">''' 相似性 ~ 评分差异性/共同评分项概率</span></span><br><span class="line"><span class="string">        sim</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        <span class="comment"># 取评分用户的交集</span></span><br><span class="line">        setA = set(a.keys())</span><br><span class="line">        setB = set(b.keys())</span><br><span class="line">        users = setA &amp; setB</span><br><span class="line"></span><br><span class="line">        coOccur = len(users)</span><br><span class="line">        <span class="comment"># 若物品没有评分用户交集，则说明没有相似性</span></span><br><span class="line">        <span class="keyword">if</span> coOccur &lt;= <span class="number">1</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        lenA = len(setA)</span><br><span class="line">        lenB = len(setB)</span><br><span class="line">        sim = <span class="number">0</span></span><br><span class="line">        warnings.filterwarnings(<span class="string">'error'</span>)</span><br><span class="line">        <span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">            rateDiff = np.abs(a[user] - b[user])</span><br><span class="line">            sim += (<span class="number">1</span> - rateDiff/<span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">        sim /= np.sqrt(lenA * lenB)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> sim</span><br></pre></td></tr></table></figure>
+<p><strong>Question</strong>. 为什么不用 pearson或者cosine等等其他的？</p>
+<p>事实上，我试过了，效果没共现好（LiRa&lt;共现&lt;推导的）。</p>
+<p>由于稀疏性，导致某些物品的co-rated用户非常少，那此时计算出来的similarity的可信度就值得推敲了，
+这是一些相似度计算方法，必须面对的一个问题。一种方式是设定个co-rated阈值<script type="math/tex">x_{threh}</script>控制similarity可信度：</p>
+<script type="math/tex; mode=display">
+\alpha(x_{co-rated}) = \left\{\begin{matrix}
+\frac{x_{co-rated}}{x_{threh}} & if\; x_{co-rated} < x_{threh}\\
+1 & otherwise
+\end{matrix}\right.</script><p>共现则不存在这样的问题，因为它本身相似度就与co-rated数成正比
+（2010 Google在youtube视频推荐算法用的相似度度量[The YouTube video recommendation system]）。
+LiRa是我找到的2017年的针对这个问题的论文提出的方法，实测效果没共现好。
+不过想法倒是挺好：在共现的想法上，加入概率和对评分差异的考虑。</p>
+<p>然后我就沿着这个思路，推导一波，简化一波，得出了rateDiffDivCoRated函数的公式，
+效果好像和共现的差不多（或者好一点），不过有个超参需要设置。这是个值得思考的点。</p>
+<h4 id="基于物品的协同过滤-cf-py"><a href="#基于物品的协同过滤-cf-py" class="headerlink" title="基于物品的协同过滤 cf.py"></a>基于物品的协同过滤 cf.py</h4><p>包含4个函数：</p>
+<ul>
+<li>初始化；</li>
+<li>相似度矩阵计算；</li>
+<li>推荐（kNN相似item选取 + 预测评分计算 + Top-N item选取）；</li>
+<li>评估（准确率、召回率、覆盖率）。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> operator <span class="keyword">import</span> itemgetter</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CF</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">''' TopN推荐 - 协同过滤(Collaborative Filtering) '''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, logger, trainset, testset, neighborK=<span class="number">20</span>, topN=<span class="number">10</span>)</span>:</span></span><br><span class="line">        self.logger = logger    <span class="comment"># 日志对象</span></span><br><span class="line">        self.trainset = trainset    <span class="comment"># 训练集</span></span><br><span class="line">        self.testset = testset      <span class="comment"># 测试集</span></span><br><span class="line">        self.neighborK = neighborK      <span class="comment"># 近邻数</span></span><br><span class="line">        self.topN = topN    <span class="comment"># 推荐数</span></span><br><span class="line">        self.simArray = &#123;&#125;      <span class="comment"># 物品相似度矩阵</span></span><br><span class="line">        self.predictRates = &#123;&#125;</span><br><span class="line">        <span class="comment"># 用于推荐算法的评价</span></span><br><span class="line">        self.precision = <span class="number">0</span></span><br><span class="line">        self.recall = <span class="number">0</span></span><br><span class="line">        self.coverage = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        self.logger.info(<span class="string">'相似近邻物品数量 = &#123;kNNValue&#125;'</span>.format(kNNValue=self.neighborK))</span><br><span class="line">        self.logger.info(<span class="string">'推荐top N物品数量 = &#123;topNValue&#125;'</span>.format(topNValue=self.topN))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">calcSimMat</span><span class="params">(self, simFunc)</span>:</span></span><br><span class="line">        <span class="string">''' 计算物品相似度矩阵 '''</span></span><br><span class="line">        self.logger.info(<span class="string">'计算物品相似度矩阵...'</span>)</span><br><span class="line">        totalItemNum = len(self.trainset.keys())</span><br><span class="line">        itemNum = <span class="number">1</span></span><br><span class="line">        <span class="keyword">for</span> itemA, userRatesA <span class="keyword">in</span> self.trainset.items():</span><br><span class="line">            <span class="keyword">for</span> itemB, userARatesB <span class="keyword">in</span> self.trainset.items():</span><br><span class="line">                <span class="keyword">if</span> itemA == itemB:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                <span class="comment"># 若对角相似度已经存在，则直接复制</span></span><br><span class="line">                self.simArray.setdefault(itemA, &#123;&#125;)</span><br><span class="line">                <span class="keyword">if</span> self.simArray.get(itemB) != <span class="literal">None</span> <span class="keyword">and</span> self.simArray[itemB].get(itemA) != <span class="literal">None</span>:</span><br><span class="line">                    self.simArray[itemA][itemB] = self.simArray[itemB][itemA]</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                self.simArray[itemA][itemB] = simFunc(userRatesA, userARatesB)</span><br><span class="line">            <span class="comment"># 记录迭代次数日志</span></span><br><span class="line">            itemNum += <span class="number">1</span></span><br><span class="line">            <span class="keyword">if</span> itemNum % <span class="number">1000</span> == <span class="number">0</span>:</span><br><span class="line">                self.logger.info(<span class="string">'计算相似度矩阵进度：&#123;rowNum&#125;/&#123;totalNum&#125;'</span>.format(rowNum=itemNum, totalNum=totalItemNum))</span><br><span class="line"></span><br><span class="line">        self.logger.info(<span class="string">'计算物品相似度矩阵成功！'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">recommand</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="string">''' 根据近邻数K，推荐Top N '''</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 给物品相似度排序</span></span><br><span class="line">        <span class="keyword">for</span> item, itemSim <span class="keyword">in</span> self.simArray.items():</span><br><span class="line">            <span class="comment"># 产生由前K个相似的物品(item, sim)组成的列表</span></span><br><span class="line">            self.simArray[item] = sorted(itemSim.items(), key=itemgetter(<span class="number">1</span>), reverse=<span class="literal">True</span>)[:self.neighborK]</span><br><span class="line">            <span class="keyword">if</span> random.random() &gt; <span class="number">0.99</span>:</span><br><span class="line">                self.logger.info(<span class="string">'example:物品[&#123;item&#125;]的相似近邻K物品为：&#123;items&#125;'</span>.format(item=item, items=self.simArray[item]))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 取用户集合</span></span><br><span class="line">        users = set()</span><br><span class="line">        <span class="keyword">for</span> _, userRates <span class="keyword">in</span> self.trainset.items():</span><br><span class="line">            users |= set(userRates.keys())</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 对每个用户的每个物品，由最相似的K个物品预测评分</span></span><br><span class="line">        self.predictRates = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">            self.predictRates.setdefault(user, &#123;&#125;)</span><br><span class="line">            <span class="keyword">for</span> item, itemSims <span class="keyword">in</span> self.simArray.items():</span><br><span class="line">                <span class="comment"># 若用户已对该物品X评分，则不用进行预测</span></span><br><span class="line">                <span class="keyword">if</span> self.trainset[item].get(user) != <span class="literal">None</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">                sumSim = <span class="number">0</span></span><br><span class="line">                sumPredictRate = <span class="number">0</span></span><br><span class="line">                coRatedNum = <span class="number">0</span></span><br><span class="line">                <span class="comment"># 遍历预测物品X的相似物品k</span></span><br><span class="line">                <span class="keyword">for</span> itemInSim, sim <span class="keyword">in</span> itemSims:</span><br><span class="line">                    <span class="comment"># 若用户没对相似物品k评分，则该物品k提供不了预测</span></span><br><span class="line">                    <span class="keyword">if</span> self.trainset[itemInSim].get(user) == <span class="literal">None</span>:</span><br><span class="line">                        <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">                    sumPredictRate += (self.trainset[itemInSim][user] * sim)</span><br><span class="line">                    sumSim += sim</span><br><span class="line">                    coRatedNum += <span class="number">1</span></span><br><span class="line">                <span class="comment"># 标准化</span></span><br><span class="line">                <span class="keyword">if</span> sumSim != <span class="number">0</span>:</span><br><span class="line">                    self.predictRates[user][item] =  sumPredictRate</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 保留预测评分中的top N</span></span><br><span class="line">        <span class="keyword">for</span> user, itemRates <span class="keyword">in</span> self.predictRates.items():</span><br><span class="line">            <span class="keyword">if</span> len(itemRates) &lt;= self.topN:</span><br><span class="line">                self.predictRates[user] = sorted(itemRates.items(), key=itemgetter(<span class="number">1</span>), reverse=<span class="literal">True</span>)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                self.predictRates[user] = sorted(itemRates.items(), key=itemgetter(<span class="number">1</span>), reverse=<span class="literal">True</span>)[:self.topN]</span><br><span class="line">            <span class="keyword">if</span> random.random() &gt; <span class="number">0.99</span>:</span><br><span class="line">                self.logger.info(<span class="string">'example:用户[&#123;u&#125;]的top N物品为：&#123;i&#125;'</span>.format(u=user, i=self.predictRates[user]))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">evaluate</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># 将以user-item的预测评分，转换为item-user评分</span></span><br><span class="line">        predictItemNum = <span class="number">0</span></span><br><span class="line">        predictItemRates = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> user, itemRates <span class="keyword">in</span> self.predictRates.items():</span><br><span class="line">            predictItemNum += len(itemRates)</span><br><span class="line">            <span class="keyword">for</span> item, rate <span class="keyword">in</span> itemRates:</span><br><span class="line">                predictItemRates.setdefault(item, &#123;&#125;)</span><br><span class="line">                predictItemRates[item][user] = rate</span><br><span class="line"></span><br><span class="line">        self.logger.info(<span class="string">'总预测物品数为：&#123;num&#125;'</span>.format(num=predictItemNum))</span><br><span class="line">        <span class="comment"># 将测试集与预测集进行比较评价：覆盖率、准确度、召回率、预测误差</span></span><br><span class="line">        predictItemTypeNum = len(predictItemRates.keys())</span><br><span class="line">        itemTypeNum = len(self.testset.keys())</span><br><span class="line">        self.coverage = predictItemTypeNum/itemTypeNum    <span class="comment"># 预测覆盖率 = 预测物品种类 / 总物品种类</span></span><br><span class="line">        self.logger.info(<span class="string">'总预测物品种类/总物品种类为：&#123;cov&#125;=&#123;pred&#125;/&#123;total&#125;'</span>.format(cov=self.coverage,</span><br><span class="line">                         pred=predictItemTypeNum, total=itemTypeNum))</span><br><span class="line"></span><br><span class="line">        hit = <span class="number">0</span></span><br><span class="line">        rateNum = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> item, userRates <span class="keyword">in</span> self.testset.items():</span><br><span class="line">            rateNum += len(userRates.keys())</span><br><span class="line">            <span class="keyword">for</span> user, rate <span class="keyword">in</span> userRates.items():</span><br><span class="line">                <span class="keyword">if</span> predictItemRates.get(item) == <span class="literal">None</span>:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                <span class="keyword">if</span> predictItemRates[item].get(user) != <span class="literal">None</span>:</span><br><span class="line">                    hit += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">        self.precision = hit/predictItemNum   <span class="comment"># 预测准确度 = 预测中 / 总预测物品数</span></span><br><span class="line">        self.recall = hit/rateNum    <span class="comment"># 预测召回率 = 预测中 / 测试集用户评分数</span></span><br><span class="line"></span><br><span class="line">        self.logger.info(<span class="string">'预测准确度 &#123;precision&#125;'</span>.format(precision=self.precision))</span><br><span class="line">        self.logger.info(<span class="string">'预测召回率 &#123;recall&#125;'</span>.format(recall=self.recall))</span><br><span class="line">        self.logger.info(<span class="string">'预测覆盖率 &#123;coverage&#125;'</span>.format(coverage=self.coverage))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 随机预测的准确率 = N * 测试集用户评分总数 / （物品种类数 * 用户数 - 已评分过的物品数）</span></span><br><span class="line">        totalRateNum = itemTypeNum * len(self.predictRates)</span><br><span class="line">        ratedNum = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> item, userRates <span class="keyword">in</span> self.trainset.items():</span><br><span class="line">            ratedNum += len(userRates)</span><br><span class="line">        unrateNum = totalRateNum - ratedNum</span><br><span class="line">        randomPrecision = self.topN * rateNum/unrateNum</span><br><span class="line">        self.logger.info(<span class="string">'随机预测误差 &#123;randomPrecision&#125;'</span>.format(randomPrecision=randomPrecision))</span><br></pre></td></tr></table></figure>
+<p><strong>Question</strong>：预测评分</p>
+<p>是的，又是一个值得思考的点。用已评分物品来预测未评分物品，需要考量：
+该用户已评分物品数据多不？与未评分物品的相似性够不？足够支撑预测不？
+如何计算预测评分（用相似度加权平均？那明明低相似度的物品不应该比高相似度的物品更能预测评分，为什么还同样权重加权平均？）</p>
+<p>我这里针对任一用户，待预测物品基于其已评分物品集合进行加权累加<script type="math/tex">\sum(rated * sim)</script>，
+粗暴的利用用户偏好进行推荐（用户偏好的某一类别物品，那么该类别内的物品的物品相似度高、已评分物品数多，
+则预测分数高），容易造成推荐类别单一。</p>
+<p>故是否可以先对物品进行分类，然后对每类推荐物品数设置一个阈值或罚项，以权衡多样性和用户偏好？</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>实战的话：</p>
+<ol>
+<li>先用小数据集，快速调试算法功能、性能，甚至初步调参；</li>
+<li>在前期测试阶段，对于公式计算的模块，使用warnings.filterwarnings(‘error’)，
+将warning也可作为exception进行捕捉，这样可以打印公式计算过程中warning的信息。后期解决问题了，便可以移除。</li>
+</ol>
+<p>理论的话，需要思考：</p>
+<ol>
+<li>co-rated数量对相似度计算的影响；</li>
+<li>已评分数和相似度大小对评分预测的影响。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div>感谢对原创的支持~</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.png" alt="郑煜伟 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.png" alt="郑煜伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/协同过滤/" rel="tag"># 协同过滤</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/07/19/2_基于SVD的协同过滤_movielens-1m/" rel="prev" title="基于SVD的协同过滤">
+                  基于SVD的协同过滤 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#程序入口"><span class="nav-number">1.</span> <span class="nav-text">程序入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#各个模块"><span class="nav-number">2.</span> <span class="nav-text">各个模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#日志模块-logger-py"><span class="nav-number">2.1.</span> <span class="nav-text">日志模块 logger.py</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据加载模块-movielens-py"><span class="nav-number">2.2.</span> <span class="nav-text">数据加载模块 movielens.py</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#相似度函数模块-similarity-py"><span class="nav-number">2.3.</span> <span class="nav-text">相似度函数模块 similarity.py</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于物品的协同过滤-cf-py"><span class="nav-number">2.4.</span> <span class="nav-text">基于物品的协同过滤 cf.py</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/cat.jpg"
+      alt="郑煜伟">
+  <p class="site-author-name" itemprop="name">郑煜伟</p>
+  <div class="site-description" itemprop="description">好奇且热情</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/zheng-yuwei" title="GitHub &rarr; https://github.com/zheng-yuwei" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:zheng.yuwei@foxmail.com" title="E-Mail &rarr; mailto:zheng.yuwei@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郑煜伟</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">96k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:27</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+  
+    <span class="post-meta-divider">|</span>
+  
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: '325a2bc50ff9f2c68efc37ef2d7b3423',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

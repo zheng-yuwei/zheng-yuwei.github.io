@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="对YOLOv2理解和复现（backbone并没用darknet19）的一点记录。">
+<meta name="keywords" content="目标检测,YOLO系列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="YOLOv2">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2018/05/03/4_YOLOv2/index.html">
+<meta property="og:site_name" content="格物致知">
+<meta property="og:description" content="对YOLOv2理解和复现（backbone并没用darknet19）的一点记录。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov2.png">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolo_grid.png">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov1_loss.jpg">
+<meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov1_2.png">
+<meta property="og:updated_time" content="2019-10-13T08:52:07.416Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="YOLOv2">
+<meta name="twitter:description" content="对YOLOv2理解和复现（backbone并没用darknet19）的一点记录。">
+<meta name="twitter:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov2.png">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2018/05/03/4_YOLOv2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>YOLOv2 | 格物致知</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">格物致知</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a href="javascript:;" class="popup-trigger">
+        
+          <i class="fa fa-search fa-fw"></i>搜索</a>
+      </li>
+    
+  </ul>
+
+    
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/zheng-yuwei" class="github-corner" title="More on GitHub" aria-label="More on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2018/05/03/4_YOLOv2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郑煜伟">
+      <meta itemprop="description" content="好奇且热情">
+      <meta itemprop="image" content="/images/cat.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="格物致知">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">YOLOv2
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-05-03 00:00:00" itemprop="dateCreated datePublished" datetime="2018-05-03T00:00:00+08:00">2018-05-03</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-13 16:52:07" itemprop="dateModified" datetime="2019-10-13T16:52:07+08:00">2019-10-13</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.7k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p align="center">
+对<strong>YOLOv2</strong>理解和复现（backbone并没用darknet19）的一点记录。
+</p>
+
+<a id="more"></a>
+<p align="center">
+    <img src="/images/YOLOv2/yolov2.png">
+</p>
+
+<blockquote>
+<p>YOLOv2将检测作为一个分类+回归问题：将图片分割为<script type="math/tex">S×S</script>个grid，
+每一个grid单元预测<script type="math/tex">B</script>个bounding box、置信度、<script type="math/tex">C</script>个类别概率，
+这些会被编码为一个<script type="math/tex">S \times S \times (B * (4+1+C))</script>的矩阵。</p>
+</blockquote>
+<h3 id="YOLOv2整体网络"><a href="#YOLOv2整体网络" class="headerlink" title="YOLOv2整体网络"></a>YOLOv2整体网络</h3><p>主要可分为以下三个方面：</p>
+<ol>
+<li><p>backbone为全卷积网络FCN，整体网络降采样32倍，有利于多尺度训练（Multi-Scale Training）；</p>
+</li>
+<li><p>使用leaky ReLU作为激活函数：</p>
+<script type="math/tex; mode=display">
+\Theta (x)=\left\{\begin{matrix}
+x & if\; x > 0\\
+0.1x & otherwise
+\end{matrix}\right.</script></li>
+<li><p>输出解码：backbone输出为<script type="math/tex">13 \times 13 \times (B*(4+1+C))</script>的三维矩阵。其中：</p>
+<ul>
+<li><p>超参数<script type="math/tex">B</script>：每个grid的bounding boxes的数量；</p>
+</li>
+<li><p>类别数<script type="math/tex">C</script>（不包含背景，所有单类的话这个分支可以去掉，损失函数部分也对应去掉），
+每位数对应相应类别的概率预测<script type="math/tex">Pr(Class_{i}|Object)</script>（之所以要定义为<code>Object</code>的条件概率，
+是因为总损失函数里，只有当<code>Object</code>中心落到对应的grid中时，该grid才计算分类损失），
+故该类别预测向量<script type="math/tex">\overrightarrow{z}</script>可以通过softmax函数转化为[0,1]之间类别概率：</p>
+<script type="math/tex; mode=display">
+Pr(Class_{i}|Object)=\frac{e^{z_{i}}}{\sum_{j}^{C}e^{z_{j}}}</script><p>实现上，为了防止数值溢出，一般会减去最大值的操作<script type="math/tex">\overrightarrow{z}-max_{i}(z_{i})</script>。</p>
+</li>
+<li><p>4个bounding box对应的坐标信息：中心点及宽高<script type="math/tex">(x_{center}, y_{center}, w, h)</script>,
+考虑到模型训练过程的稳定性，不能像region proposal算法那样，不约束预测中心的位置：</p>
+<script type="math/tex; mode=display">
+x = (t_{a} * w_{a}) + x_{a}
+y = (t_{a} * h_{a}) + y_{a}</script><p>并且YOLO把物体的检测任务根据物品中心分配到对应的grid去，所以理应把预测中心的位置限制在当前grid中，
+故提出了中心坐标<script type="math/tex">(b_{x}, b{y})</script>根据grid的左上角坐标<script type="math/tex">(c_{x}, c_{y})</script>的偏移进行预测，
+宽高的预测则是基于anchors进行比例伸缩：</p>
+<script type="math/tex; mode=display">
+b_{x} = \sigma(t_{x}) + c_{x}
+b_{y} = \sigma(t_{y}) + c_{y}
+b_{w} = p_{w}e^{t_{w}}
+b_{h} = p_{h}e^{t_{h}}</script></li>
+<li><p>1个IOU预测值：<script type="math/tex">Pr(Object) * IOU_{pred}^{truth}</script>，这里<script type="math/tex">Pr(Object)</script>指：
+只有当<code>Object</code>中心落到对应的grid中时，该grid才计算该预测值与实际IOU的损失，
+否则计算该预测值与0的损失。此时，预测值也约束为[0,1]之间：</p>
+<script type="math/tex; mode=display">
+Pr(Object) * IOU_{pred}^{truth} = \sigma(t_{o})</script></li>
+</ul>
+</li>
+<li><p>损失函数：</p>
+<script type="math/tex; mode=display">
+\begin{matrix}
+L = \lambda_{coord}*L_{xy} + \lambda_{coord}*L_{wh} + L_{iou}^{obj} + \lambda_{noobj}*L_{iou}^{noobj} + L_{class} \\
+\begin{eqnarray}
+& L_{xy} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{obj}[(x_{i}-\hat{x}_{i})^2 + (y_{i}-\hat{y}_{i})^2] \\
+& L_{wh} = & \lambda_{coord} \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{obj}[(\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^2 + (\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^2] \\
+& L_{iou}^{obj} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{obj}(C_{i}-\hat{C}_{i})^2 \\
+& L_{iou}^{noobj} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{noobj}(C_{i}-\hat{C}_{i})^2 \\
+& L_{class} = & \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c=class} (p_{i}(c)-\hat{p}_{i}(c))^2
+\end{eqnarray}
+\end{matrix}</script><p>其中，<script type="math/tex">\lambda_{coord}=5, \lambda_{noobj}=0.5</script>，以平衡坐标损失、类别损失、background的grid的IOU损失；
+而<script type="math/tex">I_{ij}^{obj}</script>表示目标中心落在第i行第j列个grid上，且该bounding box与ground truth的IOU在该grid里的boxes最大，
+则此时取值为1，否则为0；<script type="math/tex">I_{ij}^{noobj}</script>则指background的grid里，与任意ground truth的IOU都小于指定阈值（论文0.6）的box。
+宽高平方和损失函数里对宽高进行了开方，是为了缓和大小不同的box预测时的偏移差异：
+相比于大bbox预测偏一点，小box预测偏一点更不能忍受（这里用相对尺度<script type="math/tex">1-\frac{\hat{w}}{w}</script>会不会更好一些）。</p>
+</li>
+</ol>
+<p align="center">
+    <img src="/images/YOLOv2/yolo_grid.png">
+</p>
+
+<blockquote>
+<p>这个图来自<a href="https://www.cnblogs.com/makefile/p/YOLOv3.html" target="_blank" rel="noopener">目标检测网络之 YOLOv3</a>，
+图中红点也就是<script type="math/tex">I_{ij}^{obj}</script>的含义。</p>
+</blockquote>
+<p align="center">
+    <img src="/images/YOLOv2/yolov1_loss.jpg">
+</p>
+
+<blockquote>
+<p>这个图来自<a href="https://zhuanlan.zhihu.com/p/24916786" target="_blank" rel="noopener">图解YOLO</a>，虽然针对YOLO，但是可以参考一下。</p>
+</blockquote>
+<p align="center">
+    <img src="/images/YOLOv2/yolov1_2.png">
+</p>
+
+<blockquote>
+<p>这个图来自<a href="https://zhuanlan.zhihu.com/p/25167153" target="_blank" rel="noopener">YOLO2</a>，实际YOLOv2的论文中，先验box为5个。</p>
+</blockquote>
+<h3 id="YOLOv2的训练与测试"><a href="#YOLOv2的训练与测试" class="headerlink" title="YOLOv2的训练与测试"></a>YOLOv2的训练与测试</h3><p><strong>训练</strong>：</p>
+<ol>
+<li>先用ImageNet 224*224进行分类预训练backbone；</li>
+<li>再用ImageNet 448*448进行fine-tuning训练backbone；</li>
+<li>最后切换为检测任务，fine-tuning整体模型；</li>
+<li>前期12800次迭代，增加损失项：<script type="math/tex; mode=display">
+\begin{matrix}
+L = \lambda_{prior}*L_{xy} + \lambda_{prior}*L_{wh} \\
+\begin{eqnarray}
+& L_{xy} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} [(x_{i}-\hat{x}_{i})^2 + (y_{i}-\hat{y}_{i})^2] \\
+& L_{wh} = & \lambda_{coord} \sum_{i=0}^{S^2} \sum_{j=0}^{B} [(\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^2 + (\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^2] \\
+\end{eqnarray}
+\end{matrix}</script>其中，<script type="math/tex">(x_{i}, y_{i}, w_{i}, h_{i})</script>与预测框<script type="math/tex">(\hat{x}_{i}, \hat{y}_{i}, \hat{w}_{i}, \hat{h}_{i})</script>的
+IOU最大的那个先验框，<script type="math/tex">(x_{i}, y_{i})</script>是中心点，以此来使得前期所有的预测框往先验框大小靠近，往grid中心点移动。
+<strong>稳定前期训练，且有利于后期预测框的学习</strong>。</li>
+</ol>
+<p><strong>测试</strong>：</p>
+<ol>
+<li>测试时，计算指定类别的置信度：<script type="math/tex; mode=display">
+Pr(Class_{i}|Object) * Pr(Object) * IOU_{pred}^{truth} = Pr(Class_{i}) * IOU_{pred}^{truth}</script>大于一定阈值的话，则认为检测到目标<script type="math/tex">Class_{i}</script>。</li>
+<li>对所有grid进行如上计算及阈值过滤，然后进行NMS，得到最终检测结果。</li>
+</ol>
+<h3 id="YOLOv2周边"><a href="#YOLOv2周边" class="headerlink" title="YOLOv2周边"></a>YOLOv2周边</h3><p>包含聚类anchors、YOLOv2的局限、单类检测的讨论。</p>
+<h4 id="聚类anchors"><a href="#聚类anchors" class="headerlink" title="聚类anchors"></a>聚类anchors</h4><p>用k-means（每张图片的所有目标的<code>(W, H)</code>作为输入特征，
+目标框与聚类中心的<script type="math/tex">d(box, centroid) = 1-IOU(box, centroid)</script>作为距离评价指标）进行聚类，
+以k个聚类中心的尺寸<code>(W, H)</code>作为网络预定义的k个anchors的尺寸。</p>
+<h4 id="YOLOv2的局限"><a href="#YOLOv2的局限" class="headerlink" title="YOLOv2的局限"></a>YOLOv2的局限</h4><p>最终检测的特征图相对原图的缩放倍数为32倍，不利于小物体检测，
+在YOLOv3用 FPN + 基于resize的上采样信息融合 + 3种下采样率的分支 改进。</p>
+<h4 id="单类检测"><a href="#单类检测" class="headerlink" title="单类检测"></a>单类检测</h4><p>如果是单类检测器，也就是说其实这时只是为了定位，以提供后续处理，
+那么可以删除网络中的分类预测channel（单类也就是1个channel），然后损失函数里也不需要<script type="math/tex">L_{class}</script>分支。</p>
+<h3 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h3><p>后续放出来。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://zhuanlan.zhihu.com/p/24916786" target="_blank" rel="noopener">图解YOLO</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/25167153" target="_blank" rel="noopener">YOLO2</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div>感谢对原创的支持~</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.png" alt="郑煜伟 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.png" alt="郑煜伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/目标检测/" rel="tag"># 目标检测</a>
+            
+              <a href="/tags/YOLO系列/" rel="tag"># YOLO系列</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/07/23/3_基于SVD++的协同过滤_movilens-1m/" rel="next" title="基于SVD++的协同过滤">
+                  <i class="fa fa-chevron-left"></i> 基于SVD++的协同过滤
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/07/15/5_YOLOv3/" rel="prev" title="YOLOv3">
+                  YOLOv3 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2整体网络"><span class="nav-number">1.</span> <span class="nav-text">YOLOv2整体网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2的训练与测试"><span class="nav-number">2.</span> <span class="nav-text">YOLOv2的训练与测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2周边"><span class="nav-number">3.</span> <span class="nav-text">YOLOv2周边</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#聚类anchors"><span class="nav-number">3.1.</span> <span class="nav-text">聚类anchors</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#YOLOv2的局限"><span class="nav-number">3.2.</span> <span class="nav-text">YOLOv2的局限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单类检测"><span class="nav-number">3.3.</span> <span class="nav-text">单类检测</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现代码"><span class="nav-number">4.</span> <span class="nav-text">实现代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/cat.jpg"
+      alt="郑煜伟">
+  <p class="site-author-name" itemprop="name">郑煜伟</p>
+  <div class="site-description" itemprop="description">好奇且热情</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/zheng-yuwei" title="GitHub &rarr; https://github.com/zheng-yuwei" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:zheng.yuwei@foxmail.com" title="E-Mail &rarr; mailto:zheng.yuwei@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郑煜伟</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">96k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:27</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+  
+    <span class="post-meta-divider">|</span>
+  
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="/js/local-search.js?v=7.4.0"></script>
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+
+
+  
+
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: 'e78cbfba984201eb3cc9',
+      clientSecret: '04eaa9625dbed61a32f90c0401feb45440ed0e59',
+      repo: 'my-github-blog-comments',
+      owner: 'zheng-yuwei',
+      admin: ['zheng-yuwei'],
+      id: '56b406b84dc42dc29c6f3698ed6bc999',
+        language: window.navigator.language || window.navigator.userLanguage,
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>
