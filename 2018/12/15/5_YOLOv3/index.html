@@ -56,20 +56,20 @@
 </script>
 
   <meta name="description" content="对YOLOv3理解和复现（backbone并没用darknet53）的一点记录。">
-<meta name="keywords" content="目标检测,YOLO系列">
+<meta name="keywords" content="目标检测,YOLO系列,anchor-based,one-stage">
 <meta property="og:type" content="article">
 <meta property="og:title" content="YOLOv3">
-<meta property="og:url" content="https://zheng-yuwei.github.io/2018/07/15/5_YOLOv3/index.html">
+<meta property="og:url" content="https://zheng-yuwei.github.io/2018/12/15/5_YOLOv3/index.html">
 <meta property="og:site_name" content="格物致知">
 <meta property="og:description" content="对YOLOv3理解和复现（backbone并没用darknet53）的一点记录。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv3/FPN.png">
-<meta property="og:updated_time" content="2019-10-13T08:47:46.351Z">
+<meta property="og:updated_time" content="2019-11-05T13:34:53.369Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="YOLOv3">
 <meta name="twitter:description" content="对YOLOv3理解和复现（backbone并没用darknet53）的一点记录。">
 <meta name="twitter:image" content="https://zheng-yuwei.github.io/images/YOLOv3/FPN.png">
-  <link rel="canonical" href="https://zheng-yuwei.github.io/2018/07/15/5_YOLOv3/">
+  <link rel="canonical" href="https://zheng-yuwei.github.io/2018/12/15/5_YOLOv3/">
 
 
 <script id="page-configurations">
@@ -227,7 +227,7 @@
   
   
   <div class="post-block post">
-    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2018/07/15/5_YOLOv3/">
+    <link itemprop="mainEntityOfPage" href="https://zheng-yuwei.github.io/2018/12/15/5_YOLOv3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="郑煜伟">
@@ -255,7 +255,7 @@
                 
               
 
-              <time title="创建时间：2018-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-15T00:00:00+08:00">2018-07-15</time>
+              <time title="创建时间：2018-12-15 00:00:00" itemprop="dateCreated datePublished" datetime="2018-12-15T00:00:00+08:00">2018-12-15</time>
             </span>
           
             
@@ -266,7 +266,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-13 16:47:46" itemprop="dateModified" datetime="2019-10-13T16:47:46+08:00">2019-10-13</time>
+                <time title="修改时间：2019-11-05 21:34:53" itemprop="dateModified" datetime="2019-11-05T21:34:53+08:00">2019-11-05</time>
               </span>
             
           
@@ -1439,10 +1439,12 @@ detection head也分成3个尺度的feature map输出，更加适用于不同目
 <p>对应的，通过聚类而得到的anchor box，也要分配到三个尺度的检测分支去：
 将尺度大的anchor分配到感受野大的（也就是下采样stride大的检测分支），
 将尺度小的anchor分配到感受野小的（也就是下采样stride小的检测分支）。</p>
+<p>另外，训练的时候也用了多尺度的输入进行实验。</p>
 <h3 id="多属性"><a href="#多属性" class="headerlink" title="多属性"></a>多属性</h3><p>YOLOv3损失函数与YOLOv2损失函数是一致的，唯一的区别是分类误差部分，需要修改为：</p>
 <script type="math/tex; mode=display">
 L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{i}(c))^2</script><p>也就是说，由于分类概率的预测改为每个类都是二元交叉熵预测，分类损失需要对所有类别都添加损失项，
 而不像YOLOv2 softmax那种计算方式。</p>
+<h3 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h3><p>后续放出来。</p>
 <h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://github.com/qqwweee/keras-yolo3" target="_blank" rel="noopener">qqwweee/keras-yolo3</a></p>
 <p><a href="https://www.cnblogs.com/makefile/p/YOLOv3.html" target="_blank" rel="noopener">目标检测网络之 YOLOv3</a></p>
 <p><a href="https://blog.csdn.net/v_july_v/article/details/80170182" target="_blank" rel="noopener">一文读懂目标检测：R-CNN、Fast R-CNN、Faster R-CNN、YOLO、SSD</a></p>
@@ -1488,6 +1490,10 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
             
               <a href="/tags/YOLO系列/" rel="tag"># YOLO系列</a>
             
+              <a href="/tags/anchor-based/" rel="tag"># anchor-based</a>
+            
+              <a href="/tags/one-stage/" rel="tag"># one-stage</a>
+            
           </div>
         
 
@@ -1496,7 +1502,7 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2018/05/03/4_YOLOv2/" rel="next" title="YOLOv2">
+                <a href="/2018/10/03/4_YOLOv2/" rel="next" title="YOLOv2">
                   <i class="fa fa-chevron-left"></i> YOLOv2
                 </a>
               
@@ -1560,7 +1566,7 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#改进点"><span class="nav-number">1.</span> <span class="nav-text">改进点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络结构"><span class="nav-number">2.</span> <span class="nav-text">网络结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多尺度"><span class="nav-number">3.</span> <span class="nav-text">多尺度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多属性"><span class="nav-number">4.</span> <span class="nav-text">多属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#改进点"><span class="nav-number">1.</span> <span class="nav-text">改进点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络结构"><span class="nav-number">2.</span> <span class="nav-text">网络结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多尺度"><span class="nav-number">3.</span> <span class="nav-text">多尺度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多属性"><span class="nav-number">4.</span> <span class="nav-text">多属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现代码"><span class="nav-number">5.</span> <span class="nav-text">实现代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
         
       </div>
       <!--/noindex-->
@@ -1592,7 +1598,7 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -1647,12 +1653,12 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">96k</span>
+    <span title="站点总字数">97k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:27</span>
+    <span title="站点阅读时长">1:28</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
@@ -1820,7 +1826,7 @@ if (document.querySelectorAll('div.pdf').length) {
       repo: 'my-github-blog-comments',
       owner: 'zheng-yuwei',
       admin: ['zheng-yuwei'],
-      id: '845c868d1c7ac4bffb65672cd4e3494e',
+      id: '62c90eb4213aa5eae127d2b56b822f8d',
         language: window.navigator.language || window.navigator.userLanguage,
       
       distractionFreeMode: 'true'

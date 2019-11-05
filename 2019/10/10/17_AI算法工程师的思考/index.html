@@ -55,18 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+  <meta name="description" content="AI算法落地的一点粗浅思考。同时发现了一个很好的git库。">
 <meta name="keywords" content="AI算法工程师,素养">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AI算法工程师的思考">
 <meta property="og:url" content="https://zheng-yuwei.github.io/2019/10/10/17_AI算法工程师的思考/index.html">
 <meta property="og:site_name" content="格物致知">
-<meta property="og:description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+<meta property="og:description" content="AI算法落地的一点粗浅思考。同时发现了一个很好的git库。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-13T03:14:19.807Z">
+<meta property="og:updated_time" content="2019-11-05T13:59:38.467Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI算法工程师的思考">
-<meta name="twitter:description" content="就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。 这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、 项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。 这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。">
+<meta name="twitter:description" content="AI算法落地的一点粗浅思考。同时发现了一个很好的git库。">
   <link rel="canonical" href="https://zheng-yuwei.github.io/2019/10/10/17_AI算法工程师的思考/">
 
 
@@ -264,7 +264,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-13 11:14:19" itemprop="dateModified" datetime="2019-10-13T11:14:19+08:00">2019-10-13</time>
+                <time title="修改时间：2019-11-05 21:59:38" itemprop="dateModified" datetime="2019-11-05T21:59:38+08:00">2019-11-05</time>
               </span>
             
           
@@ -286,7 +286,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>876</span>
+              <span>849</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -309,17 +309,22 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>就个人粗浅的经验而言，AI算法项目和传统的软件项目之间存在着十分大的差异。
-这些差异来自 对新的应用领域（AI）把握的不确定性、项目推进过程中关键节点的不同、
-项目中发挥关键作用的人员的不同、项目度量指标的差异，等等。
-这些差异，导致AI算法工程师和传统的软件工程师之间所需要素养也存在一定的差异。</p>
+        <p>AI算法落地的一点粗浅思考。同时发现了一个很好的<a href="https://github.com/lonelygo/Shift-AI-models-to-real-world-products" target="_blank" rel="noopener">git库</a>。</p>
 <a id="more"></a>
-<h3 id="AI算法工程师的素养"><a href="#AI算法工程师的素养" class="headerlink" title="AI算法工程师的素养"></a>AI算法工程师的素养</h3><p>说到软件工程师，说得更多的是代码素养，要做到设计良好、高可读、
-良好注释（代码自注释what，文字解释why，且注释随代码更新）、单一职责、
-最小知识、低耦合高内聚，等等；而AI算法工程师，我的理解则更多需要下面的能力素养。</p>
+<h3 id="AI算法工程师应该具备的能力"><a href="#AI算法工程师应该具备的能力" class="headerlink" title="AI算法工程师应该具备的能力"></a>AI算法工程师应该具备的能力</h3><p>AI落地时大概要经过以下阶段：</p>
+<ol>
+<li>抽象与定义问题；</li>
+<li>数据理解；</li>
+<li>反思数据；</li>
+<li>工程pipeline的建立；</li>
+<li>回溯与迭代。</li>
+</ol>
 <h4 id="抽象与定义问题的能力"><a href="#抽象与定义问题的能力" class="headerlink" title="抽象与定义问题的能力"></a>抽象与定义问题的能力</h4><p>李航的《统计学习方法》中，定义了统计学习的三要素：模型（假设空间）、
-策略（评价准则）、算法（优化步骤）。描述了应用算法解决问题时的三个重要关键点。
-这里的模型部分，和抽象与定义问题能力具有一致的目的：尝试建立出适用于问题的模型。</p>
+策略（评价准则）、算法（优化步骤）。描述了应用算法解决问题时的三个重要关键点。</p>
+<p>作为的第一步，定义模型的假设空间，需要我们能从问题的实际描述之中，
+抽象与定义出适用于问题的模型。</p>
+<p>其实这个能力作为传统算法或者数学建模、工程问题解决等领域，都是极其重要的。
+只不过当前的AI算法给人无所不能的假象，但又不赋予</p>
 <p>在当前的AI实际应用中，问题的描述是比较高语义的智能应用场景，
 很多时候使用的是深度学习（不像统计学习、机器学习、概率统计等领域，
 具有强大的理论支撑），较难以理论分析不同的算法在最终应用效果上的差异
@@ -335,8 +340,9 @@
 <h4 id="理解数据"><a href="#理解数据" class="headerlink" title="理解数据"></a>理解数据</h4><p>相比rule-driven或theory-driven，更多的是data-driven，
 观察数据，从数据本身出发，与抽象与定义问题形成反馈，获得更多的有用信息。
 场景拆分、细化，问题转移（传感器、语言或视觉？）</p>
-<h4 id="数据标注"><a href="#数据标注" class="headerlink" title="数据标注"></a>数据标注</h4><p>是否可标准，标注是否确切（半监督？弱标注？）</p>
-<h4 id="工程pipeline的建立"><a href="#工程pipeline的建立" class="headerlink" title="工程pipeline的建立"></a>工程pipeline的建立</h4><p>利于迭代验证</p>
+<h4 id="反思数据"><a href="#反思数据" class="headerlink" title="反思数据"></a>反思数据</h4><p>理解数据在于基于当前问题吃透给定的数据。但在实际项目落地中，不仅仅是接受给定数据，
+要反思数据：当前数据是否足够，是否可获取其他辅助数据？数据是否可标准，标注是否确切（半监督？弱标注？）</p>
+<h4 id="工程pipeline的建立"><a href="#工程pipeline的建立" class="headerlink" title="工程pipeline的建立"></a>工程pipeline的建立</h4><p>利于快速迭代验证。</p>
 <h4 id="回溯与迭代"><a href="#回溯与迭代" class="headerlink" title="回溯与迭代"></a>回溯与迭代</h4><p>进一步定义问题，思考与优化，时间、空间、准确率等指标的trade off。</p>
 <h3 id="其他能力要求"><a href="#其他能力要求" class="headerlink" title="其他能力要求"></a>其他能力要求</h3><h4 id="论文阅读"><a href="#论文阅读" class="headerlink" title="论文阅读"></a>论文阅读</h4><p>思想的源泉，问题阻塞点解决的出路。</p>
 <h4 id="分享与讨论"><a href="#分享与讨论" class="headerlink" title="分享与讨论"></a>分享与讨论</h4><p>社区、同事</p>
@@ -450,7 +456,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#AI算法工程师的素养"><span class="nav-number">1.</span> <span class="nav-text">AI算法工程师的素养</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#抽象与定义问题的能力"><span class="nav-number">1.1.</span> <span class="nav-text">抽象与定义问题的能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#理解数据"><span class="nav-number">1.2.</span> <span class="nav-text">理解数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据标注"><span class="nav-number">1.3.</span> <span class="nav-text">数据标注</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工程pipeline的建立"><span class="nav-number">1.4.</span> <span class="nav-text">工程pipeline的建立</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#回溯与迭代"><span class="nav-number">1.5.</span> <span class="nav-text">回溯与迭代</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他能力要求"><span class="nav-number">2.</span> <span class="nav-text">其他能力要求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#论文阅读"><span class="nav-number">2.1.</span> <span class="nav-text">论文阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分享与讨论"><span class="nav-number">2.2.</span> <span class="nav-text">分享与讨论</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#AI算法工程师应该具备的能力"><span class="nav-number">1.</span> <span class="nav-text">AI算法工程师应该具备的能力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#抽象与定义问题的能力"><span class="nav-number">1.1.</span> <span class="nav-text">抽象与定义问题的能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#理解数据"><span class="nav-number">1.2.</span> <span class="nav-text">理解数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#反思数据"><span class="nav-number">1.3.</span> <span class="nav-text">反思数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工程pipeline的建立"><span class="nav-number">1.4.</span> <span class="nav-text">工程pipeline的建立</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#回溯与迭代"><span class="nav-number">1.5.</span> <span class="nav-text">回溯与迭代</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他能力要求"><span class="nav-number">2.</span> <span class="nav-text">其他能力要求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#论文阅读"><span class="nav-number">2.1.</span> <span class="nav-text">论文阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分享与讨论"><span class="nav-number">2.2.</span> <span class="nav-text">分享与讨论</span></a></li></ol></li></ol></div>
         
       </div>
       <!--/noindex-->
@@ -482,7 +488,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -537,12 +543,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">96k</span>
+    <span title="站点总字数">97k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:27</span>
+    <span title="站点阅读时长">1:28</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
