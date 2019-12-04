@@ -64,7 +64,7 @@
 <meta property="og:description" content="对YOLOv3理解和复现（backbone并没用darknet53）的一点记录。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv3/FPN.png">
-<meta property="og:updated_time" content="2019-11-05T13:34:53.369Z">
+<meta property="og:updated_time" content="2019-12-03T07:57:25.425Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="YOLOv3">
 <meta name="twitter:description" content="对YOLOv3理解和复现（backbone并没用darknet53）的一点记录。">
@@ -266,7 +266,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-05 21:34:53" itemprop="dateModified" datetime="2019-11-05T21:34:53+08:00">2019-11-05</time>
+                <time title="修改时间：2019-12-03 15:57:25" itemprop="dateModified" datetime="2019-12-03T15:57:25+08:00">2019-12-03</time>
               </span>
             
           
@@ -318,11 +318,10 @@
 <a id="more"></a>
 <h3 id="改进点"><a href="#改进点" class="headerlink" title="改进点"></a>改进点</h3><p>相比YOLOv2主要改进点为：</p>
 <ol>
-<li><strong>多尺度</strong>：网络backbone使用FPN，融合不同粒度的学习（语义和像素信息）；
-detection head也分成3个尺度的feature map输出，更加适用于不同目标大小的检测；</li>
+<li><strong>多尺度</strong>：网络<code>backbone</code>使用<code>FPN</code>，融合不同粒度的学习（语义和像素信息）；<code>detection head</code>也分成3个尺度的<code>feature map</code>输出，更加适用于不同目标大小的检测；</li>
 <li><strong>多属性</strong>：分类损失改为 二元交叉熵损失，也就是同一个目标可以属于多个类，贴近实际应用场景。</li>
 </ol>
-<h3 id="网络结构"><a href="#网络结构" class="headerlink" title="网络结构"></a>网络结构</h3><p>原论文网络结构采用darknet-53，针对COCO数据集（80类，故每个detection head的输出
+<h3 id="网络结构"><a href="#网络结构" class="headerlink" title="网络结构"></a>网络结构</h3><p>原论文网络结构采用<code>darknet-53</code>，针对COCO数据集（80类，故每个<code>detection head</code>的输出
 为<script type="math/tex">S \times S \times (3 * (4 + 1 + 80)) = S \times S \times 255</script>）：</p>
 <div class="table-container">
 <table>
@@ -1419,32 +1418,21 @@ detection head也分成3个尺度的feature map输出，更加适用于不同目
 <blockquote>
 <p>骨干结构参考了FPN结构</p>
 </blockquote>
-<p>YOLOv3采用多个尺度进行预测（之所以从小到大解释，因为大尺度依赖小尺度的上采样）：</p>
+<p><code>YOLOv3</code>采用多个尺度进行预测（之所以从小到大解释，因为大尺度依赖小尺度的上采样）：</p>
 <ul>
-<li><p>小尺度：<script type="math/tex">13 \times 13</script>，网络接受<script type="math/tex">416 \times 416 \times 3</script>的图，经过5个步长为2的卷积模块，
-得到第79层<script type="math/tex">13(=\frac{416}{2^{5}}) \times 13 \times 512</script>特征图，然后接上两层卷积以进行检测回归，
-最终得到输出特征图 <script type="math/tex">13 \times 13 \times 255</script>；</p>
+<li><p>小尺度：<script type="math/tex">13 \times 13</script>，网络接受<script type="math/tex">416 \times 416 \times 3</script>的图，经过5个步长为2的卷积模块，得到第79层<script type="math/tex">13(=\frac{416}{2^{5}}) \times 13 \times 512</script>特征图，然后接上两层卷积以进行检测回归，最终得到输出特征图 <script type="math/tex">13 \times 13 \times 255</script>；</p>
 </li>
-<li><p>中尺度：<script type="math/tex">26 \times 26</script>，顺着主骨干网络第79层<script type="math/tex">13 \times 13 \times 512</script>，
-用<script type="math/tex">1 \times 1 \times 256</script>卷积核将channel减半，然后上采样<script type="math/tex">\times 2</script>得到<script type="math/tex">26 \times 26 \times 256</script>；
-取主骨干网络的第61层<script type="math/tex">26 \times 26 \times 512</script>分支concat起来，得到<script type="math/tex">26 \times 26 \times 768</script>特征图，
-然后接上7层卷积以进行检测回归，最终得到输出特征图 <script type="math/tex">26 \times 26 \times 255</script>；</p>
+<li><p>中尺度：<script type="math/tex">26 \times 26</script>，顺着主骨干网络第79层<script type="math/tex">13 \times 13 \times 512</script>，用<script type="math/tex">1 \times 1 \times 256</script>卷积核将channel减半，然后上采样<script type="math/tex">\times 2</script>得到<script type="math/tex">26 \times 26 \times 256</script>；取主骨干网络的第61层<script type="math/tex">26 \times 26 \times 512</script>分支concat起来，得到<script type="math/tex">26 \times 26 \times 768</script>特征图，然后接上7层卷积以进行检测回归，最终得到输出特征图 <script type="math/tex">26 \times 26 \times 255</script>；</p>
 </li>
-<li><p>大尺度：<script type="math/tex">52 \times 52</script>，顺着中尺度的detection head第91层<script type="math/tex">26 \times 26 \times 256</script>，
-用<script type="math/tex">1 \times 1 \times 128</script>卷积核将channel减半，然后上采样<script type="math/tex">\times 2</script>得到<script type="math/tex">52 \times 52 \times 128</script>；
-取主骨干网络的第36层<script type="math/tex">26 \times 26 \times 256</script>分支concat起来，得到<script type="math/tex">26 \times 26 \times 384</script>特征图，
-然后接上7层卷积以进行检测回归，最终得到输出特征图 <script type="math/tex">52 \times 52 \times 255</script>；</p>
+<li><p>大尺度：<script type="math/tex">52 \times 52</script>，顺着中尺度的detection head第91层<script type="math/tex">26 \times 26 \times 256</script>，用<script type="math/tex">1 \times 1 \times 128</script>卷积核将channel减半，然后上采样<script type="math/tex">\times 2</script>得到<script type="math/tex">52 \times 52 \times 128</script>；取主骨干网络的第36层<script type="math/tex">26 \times 26 \times 256</script>分支concat起来，得到<script type="math/tex">26 \times 26 \times 384</script>特征图，然后接上7层卷积以进行检测回归，最终得到输出特征图 <script type="math/tex">52 \times 52 \times 255</script>；</p>
 </li>
 </ul>
-<p>对应的，通过聚类而得到的anchor box，也要分配到三个尺度的检测分支去：
-将尺度大的anchor分配到感受野大的（也就是下采样stride大的检测分支），
-将尺度小的anchor分配到感受野小的（也就是下采样stride小的检测分支）。</p>
+<p>对应的，通过聚类而得到的<code>anchor box</code>，也要分配到三个尺度的检测分支去：将尺度大的<code>anchor</code>分配到感受野大的（也就是下采样stride大的检测分支），将尺度小的<code>anchor</code>分配到感受野小的（也就是下采样<code>stride</code>小的检测分支）。</p>
 <p>另外，训练的时候也用了多尺度的输入进行实验。</p>
 <h3 id="多属性"><a href="#多属性" class="headerlink" title="多属性"></a>多属性</h3><p>YOLOv3损失函数与YOLOv2损失函数是一致的，唯一的区别是分类误差部分，需要修改为：</p>
 <script type="math/tex; mode=display">
-L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{i}(c))^2</script><p>也就是说，由于分类概率的预测改为每个类都是二元交叉熵预测，分类损失需要对所有类别都添加损失项，
-而不像YOLOv2 softmax那种计算方式。</p>
-<h3 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h3><p>后续放出来。</p>
+L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{i}(c))^2</script><p>也就是说，由于分类概率的预测改为每个类都是二元交叉熵预测，分类损失需要对所有类别都添加损失项，而不像<code>YOLOv2 softmax</code>那种计算方式。</p>
+<h3 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h3><p><a href="https://github.com/zheng-yuwei/YOLOv3-tensorflow" target="_blank" rel="noopener">zheng-yuwei/YOLOv3-tensorflow</a></p>
 <h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://github.com/qqwweee/keras-yolo3" target="_blank" rel="noopener">qqwweee/keras-yolo3</a></p>
 <p><a href="https://www.cnblogs.com/makefile/p/YOLOv3.html" target="_blank" rel="noopener">目标检测网络之 YOLOv3</a></p>
 <p><a href="https://blog.csdn.net/v_july_v/article/details/80170182" target="_blank" rel="noopener">一文读懂目标检测：R-CNN、Fast R-CNN、Faster R-CNN、YOLO、SSD</a></p>
@@ -1653,12 +1641,12 @@ L_{class} = \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c}^{classes} (p_{i}(c)-\hat{p}_{
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">97k</span>
+    <span title="站点总字数">99k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:28</span>
+    <span title="站点阅读时长">1:30</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>

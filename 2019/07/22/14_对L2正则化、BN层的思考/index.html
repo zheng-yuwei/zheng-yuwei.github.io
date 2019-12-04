@@ -55,18 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="对BN层对网络卷积层权重L2正则化的影响、 BN层的gamma项正则化作用、卷积层权重L2正则化的作用、 如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
+  <meta name="description" content="对BN层对网络卷积层权重L2正则化的影响、BN层的gamma项正则化作用、卷积层权重L2正则化的作用、如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
 <meta name="keywords" content="L2正则化,batch normalizatin,warm-up">
 <meta property="og:type" content="article">
 <meta property="og:title" content="对L2正则化、BN层的思考">
 <meta property="og:url" content="https://zheng-yuwei.github.io/2019/07/22/14_对L2正则化、BN层的思考/index.html">
 <meta property="og:site_name" content="格物致知">
-<meta property="og:description" content="对BN层对网络卷积层权重L2正则化的影响、 BN层的gamma项正则化作用、卷积层权重L2正则化的作用、 如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
+<meta property="og:description" content="对BN层对网络卷积层权重L2正则化的影响、BN层的gamma项正则化作用、卷积层权重L2正则化的作用、如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-13T03:16:31.359Z">
+<meta property="og:updated_time" content="2019-12-03T09:33:14.927Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="对L2正则化、BN层的思考">
-<meta name="twitter:description" content="对BN层对网络卷积层权重L2正则化的影响、 BN层的gamma项正则化作用、卷积层权重L2正则化的作用、 如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
+<meta name="twitter:description" content="对BN层对网络卷积层权重L2正则化的影响、BN层的gamma项正则化作用、卷积层权重L2正则化的作用、如何更好的调整L2正则项权重、学习率、gamma项权重等超参 等问题的思考。">
   <link rel="canonical" href="https://zheng-yuwei.github.io/2019/07/22/14_对L2正则化、BN层的思考/">
 
 
@@ -264,7 +264,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-13 11:16:31" itemprop="dateModified" datetime="2019-10-13T11:16:31+08:00">2019-10-13</time>
+                <time title="修改时间：2019-12-03 17:33:14" itemprop="dateModified" datetime="2019-12-03T17:33:14+08:00">2019-12-03</time>
               </span>
             
           
@@ -286,7 +286,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.3k</span>
+              <span>1.8k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -296,7 +296,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>1 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -309,13 +309,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>对<strong>BN层对网络卷积层权重L2正则化的影响</strong>、
-<strong>BN层的gamma项正则化作用</strong>、<strong>卷积层权重L2正则化的作用</strong>、
-<strong>如何更好的调整L2正则项权重、学习率、gamma项权重等超参</strong> 等问题的思考。</p>
+        <p>对<strong><code>BN</code>层对网络卷积层权重<code>L2</code>正则化的影响</strong>、<strong><code>BN</code>层的gamma项正则化作用</strong>、<strong>卷积层权重<code>L2</code>正则化的作用</strong>、<strong>如何更好的调整<code>L2</code>正则项权重、学习率、gamma项权重等超参</strong> 等问题的思考。</p>
 <a id="more"></a>
 <p>涉及的论文：</p>
 <ul>
-<li>主要的思想来源：</li>
+<li>主要的思想来源</li>
 </ul>
 <p><a href="https://arxiv.org/pdf/1706.05350.pdf" target="_blank" rel="noopener">L2 Regularization versus Batch and Weight Normalization</a></p>
 <p><a href="https://arxiv.org/pdf/1809.00846.pdf" target="_blank" rel="noopener">Towards Understanding Regularization in Batch Normalization</a></p>
@@ -325,22 +323,35 @@
 </ul>
 <p><a href="https://arxiv.org/pdf/1708.06519.pdf" target="_blank" rel="noopener">Learning Efficient Convolutional Networks through Network Slimming</a></p>
 <p><a href="https://arxiv.org/pdf/1707.01213.pdf" target="_blank" rel="noopener">Data-Driven Sparse Structure Selection for Deep Neural Networks</a></p>
-<p>之所以开始这一方面的了解，源于对network pruning方面文章（SSS和network slimming）的阅读：</p>
+<h2 id="引爆点：剪枝"><a href="#引爆点：剪枝" class="headerlink" title="引爆点：剪枝"></a>引爆点：剪枝</h2><p>之所以开始这一方面的了解，源于对<code>network pruning</code>方面文章（<code>SSS</code>和<code>network slimming</code>）的阅读：</p>
 <ul>
-<li>Network Slimming：增加 BN层中<script type="math/tex">gamma</script>的正则项，而后根据<script type="math/tex">gamma</script>大小进行剪枝：<script type="math/tex; mode=display">
-L = \sum_{(x,y)}l(f(x,W),y) + \gamma * \sum_{\gamma \in \Gamma}g(\gamma)</script></li>
-<li>Sparse Structure Selection：直接在group/block/channel后新增一层，该层就只有一个scale factor <script type="math/tex">\gamma</script>,
-然后增加L1正则项<script type="math/tex">|\gamma|</script>；用加速近端梯度下降求解<script type="math/tex">\gamma</script>（软阈值 + 动量梯度下降）。</li>
+<li><code>Network Slimming</code>：增加 <code>BN</code>层中<script type="math/tex">gamma</script>的正则项，而后根据<script type="math/tex">gamma</script>大小进行剪枝：</li>
 </ul>
-<p>复现的过程中，想到一个问题：无论是对于BN层还是自定义层，在降低<script type="math/tex">\gamma</script>以减小正则项时，
-都可以通过增加对应的卷积层的权重<script type="math/tex">W</script>，从而实现模型不变而损失函数减少的目的
-（当然，此时模型的损失函数不包含卷积层的权重衰减正则项的话）。
-而如果损失函数加入卷积层的权重衰减正则项的话，那么此时其实增加了两个超参：<script type="math/tex">\lambda_{conv}</script>和<script type="math/tex">\lambda_{\gamma}</script>
-（如果是SSS，则是3个超参）。<script type="math/tex">\lambda_{conv}</script>一般设定为默认值0.0005，
-而<script type="math/tex">\lambda_{\gamma}</script>则通过调参设置而达到 network slimming 的功效。</p>
-<p>那么，BN层<script type="math/tex">\gamma</script>、卷积层权重<script type="math/tex">W</script>、正则化 这三者的关系，其内涵和对模型优化的影响究竟是咋样的呢？
-带着这样的问题，开启这一小分支的探索和实现（剪枝ppt后续放出）。</p>
-<h2 id="L2正则化与BN层的关系"><a href="#L2正则化与BN层的关系" class="headerlink" title="L2正则化与BN层的关系"></a>L2正则化与BN层的关系</h2><p>下面是batch size和learning rate的延伸。</p>
+<script type="math/tex; mode=display">
+\begin{matrix}
+L = \frac{1}{N} * \sum_{(x,y)}l(y_{BN}(X; w, \gamma, \beta), y) + \lambda_{\gamma} * \sum_{\gamma \in \Gamma}g(\gamma) \\
+ \\
+y_{BN}(X; w, \gamma, \beta) = g(\gamma * \frac{Xw - \mu (Xw)}{\sigma (Xw)} + \beta)
+\end{matrix}</script><ul>
+<li><code>Sparse Structure Selection</code>：直接在<code>group/block/channel</code>后新增一层，该层就只有一个伸缩系数<script type="math/tex">\gamma</script>,然后增加L1正则项<script type="math/tex">|\gamma|</script>；用加速近端梯度下降求解<script type="math/tex">\gamma</script>（软阈值 + 动量梯度下降）。</li>
+</ul>
+<p>复现的过程中，想到了几个问题（仅基于<code>Network Slimming</code>讨论先，<code>SSS</code>同理）：</p>
+<ol>
+<li>有了<code>BN</code>层的归一化作用，卷积层权重<script type="math/tex">W</script>可以整体成比例放大或缩小，而不影响模型效果（这里有偏置<script type="math/tex">b</script>的话同理）；也就是说卷积层的<code>L2</code>罚项没用了？</li>
+<li>上一<code>BN</code>层的<script type="math/tex">\gamma</script>系数也是整体成比例放大或缩小，而不影响模型效果（这里偏置<script type="math/tex">\beta</script>同理）；也就是说剪枝衰减<code>L2</code>项没用？</li>
+</ol>
+<p>也就是说损失函数中，卷积层的<code>L2</code>权重衰减正则项的权重系数<script type="math/tex">\lambda_{w}</script>（一般设定为默认值0.0005）、<code>BN</code>层<script type="math/tex">\gamma</script>的<code>L2</code>权重衰减正则项<script type="math/tex">\lambda_{\gamma}</script>，这两项再怎么调，网络都有能力通过成比例放大/缩小对应项，而达到模型效果、损失函数大小都不变的情况！！！</p>
+<p>那么，<strong><code>BN</code>层<script type="math/tex">\gamma</script>、卷积层权重<script type="math/tex">W</script>、正则化项</strong> 这三者的关系，其内涵和对模型优化的影响究竟是咋样的呢？带着这样的问题，开启这一小分支的探索。</p>
+<h2 id="L2正则化与BN层的关系"><a href="#L2正则化与BN层的关系" class="headerlink" title="L2正则化与BN层的关系"></a><code>L2</code>正则化与<code>BN</code>层的关系</h2><p>我们将没有加入<code>BN</code>层的网络表示为：</p>
+<script type="math/tex; mode=display">
+L = \frac{1}{N} * \sum_{(x,y)}l(y_{NN}(X; w, b), y) + \lambda_{w} * \sum g(w) \\
+ \\
+y_{NN}(X; w, b) = g(Xw+b)</script><p>那么对卷积层权重<script type="math/tex">W</script>做<code>L2</code>惩罚，可以降低卷积层权重<script type="math/tex">W</script>的值，从而达到压缩网络模型容量的作用。</p>
+<p>而对于加入<code>BN</code>层的网络：</p>
+<script type="math/tex; mode=display">
+L = \frac{1}{N} * \sum_{(x,y)}l(y_{BN}(X; w, \gamma, \beta), y) + \lambda_{w} * \sum g(w) \\
+ \\
+y_{BN}(X; w, \gamma, \beta) = g(\gamma * \frac{Xw - \mu (Xw)}{\sigma (Xw)} + \beta)</script><p>下面是batch size和learning rate的延伸。</p>
 <h2 id="Large-batch-training引发的问题"><a href="#Large-batch-training引发的问题" class="headerlink" title="Large batch training引发的问题"></a>Large batch training引发的问题</h2><h2 id="Linear-Scaling-Rule-batch-size、learning-rate、warm-up的纠葛）"><a href="#Linear-Scaling-Rule-batch-size、learning-rate、warm-up的纠葛）" class="headerlink" title="Linear Scaling Rule (batch size、learning rate、warm-up的纠葛）"></a>Linear Scaling Rule (batch size、learning rate、warm-up的纠葛）</h2><p>Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour</p>
 
     </div>
@@ -458,7 +469,7 @@ L = \sum_{(x,y)}l(f(x,W),y) + \gamma * \sum_{\gamma \in \Gamma}g(\gamma)</script
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#L2正则化与BN层的关系"><span class="nav-number">1.</span> <span class="nav-text">L2正则化与BN层的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Large-batch-training引发的问题"><span class="nav-number">2.</span> <span class="nav-text">Large batch training引发的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linear-Scaling-Rule-batch-size、learning-rate、warm-up的纠葛）"><span class="nav-number">3.</span> <span class="nav-text">Linear Scaling Rule (batch size、learning rate、warm-up的纠葛）</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引爆点：剪枝"><span class="nav-number">1.</span> <span class="nav-text">引爆点：剪枝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#L2正则化与BN层的关系"><span class="nav-number">2.</span> <span class="nav-text">L2正则化与BN层的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Large-batch-training引发的问题"><span class="nav-number">3.</span> <span class="nav-text">Large batch training引发的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linear-Scaling-Rule-batch-size、learning-rate、warm-up的纠葛）"><span class="nav-number">4.</span> <span class="nav-text">Linear Scaling Rule (batch size、learning rate、warm-up的纠葛）</span></a></li></ol></div>
         
       </div>
       <!--/noindex-->
@@ -545,12 +556,12 @@ L = \sum_{(x,y)}l(f(x,W),y) + \gamma * \sum_{\gamma \in \Gamma}g(\gamma)</script
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">97k</span>
+    <span title="站点总字数">99k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:28</span>
+    <span title="站点阅读时长">1:30</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
@@ -652,6 +663,56 @@ if (document.querySelectorAll('div.pdf').length) {
 
   
 
+  
+    
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
   
 
   

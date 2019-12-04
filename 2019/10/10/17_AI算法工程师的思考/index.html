@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="格物致知">
 <meta property="og:description" content="AI算法落地的一点粗浅思考。 同时发现了一个很好的git库。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-06T02:45:31.455Z">
+<meta property="og:updated_time" content="2019-12-03T08:15:05.168Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI算法工程师的思考">
 <meta name="twitter:description" content="AI算法落地的一点粗浅思考。 同时发现了一个很好的git库。">
@@ -264,7 +264,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-06 10:45:31" itemprop="dateModified" datetime="2019-11-06T10:45:31+08:00">2019-11-06</time>
+                <time title="修改时间：2019-12-03 16:15:05" itemprop="dateModified" datetime="2019-12-03T16:15:05+08:00">2019-12-03</time>
               </span>
             
           
@@ -286,7 +286,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>868</span>
+              <span>904</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -320,29 +320,18 @@
 <li>工程pipeline的建立；</li>
 <li>回溯与迭代。</li>
 </ol>
-<h4 id="抽象与定义问题的能力"><a href="#抽象与定义问题的能力" class="headerlink" title="抽象与定义问题的能力"></a>抽象与定义问题的能力</h4><p>李航的《统计学习方法》中，定义了统计学习的三要素：模型（假设空间）、
-策略（评价准则）、算法（优化步骤）。描述了应用算法解决问题时的三个重要关键点。</p>
-<p>作为的第一步，定义模型的假设空间，需要我们能从问题的实际描述之中，
-抽象与定义出适用于问题的模型。</p>
-<p>其实这个能力作为传统算法或者数学建模、工程问题解决等领域，都是极其重要的。
-只不过当前的AI算法给人无所不能的假象，但又不赋予</p>
-<p>在当前的AI实际应用中，问题的描述是比较高语义的智能应用场景，
-很多时候使用的是深度学习（不像统计学习、机器学习、概率统计等领域，
-具有强大的理论支撑），较难以理论分析不同的算法在最终应用效果上的差异
-（正向：问题到算法再到模型再到最终目标存在多种可能）；
-同时也难以从算法回头明确问题（反向：算法/模型回推问题归属领域）。
-所以，为了维护形成一个问题-&gt;实现-&gt;分析的优化迭代过程，必须不断的对问题进行抽象与定义。</p>
+<h4 id="抽象与定义问题的能力"><a href="#抽象与定义问题的能力" class="headerlink" title="抽象与定义问题的能力"></a>抽象与定义问题的能力</h4><p>李航的《统计学习方法》中，定义了统计学习的三要素：模型（假设空间）、策略（评价准则）、算法（优化步骤）。描述了应用算法解决问题时的三个重要关键点。</p>
+<p>作为的第一步，定义模型的假设空间，需要我们能从问题的实际描述之中，抽象与定义出适用于问题的模型。</p>
+<p>其实这个能力作为传统算法或者数学建模、工程问题解决等领域，都是极其重要的。只不过当前的AI算法给人无所不能的假象，但又不赋予其可解释性，导致达到商业标准而实际落地还是有一定GAP。</p>
+<p>在当前的AI实际应用中，问题的描述是比较<strong>高语义的智能应用场景</strong>，很多时候使用的是深度学习（不像统计学习、机器学习、概率统计等领域，具有强大的理论支撑），较难以理论分析不同的算法在最终应用效果上的差异（正向：问题到算法再到模型再到最终目标存在多种可能）；同时也难以从算法回头明确问题（反向：算法/模型回推问题归属领域）。所以，为了维护形成一个<strong>问题-&gt;实现-&gt;分析</strong>的优化迭代过程，必须不断的对问题进行抽象与定义。</p>
 <p>而抽象与定义问题的过程，个人认为需要注意以下三点：</p>
 <ol>
 <li>目标场景；</li>
 <li>问题边界/标准，或者说测试验收边界；</li>
 <li>可能的建模方式：分割？检测？分类？</li>
 </ol>
-<h4 id="理解数据"><a href="#理解数据" class="headerlink" title="理解数据"></a>理解数据</h4><p>相比rule-driven或theory-driven，更多的是data-driven，
-观察数据，从数据本身出发，与抽象与定义问题形成反馈，获得更多的有用信息。
-场景拆分、细化，问题转移（传感器、语言或视觉？）</p>
-<h4 id="反思数据"><a href="#反思数据" class="headerlink" title="反思数据"></a>反思数据</h4><p>理解数据在于基于当前问题吃透给定的数据。但在实际项目落地中，不仅仅是接受给定数据，
-要反思数据：当前数据是否足够，是否可获取其他辅助数据？数据是否可标准，标注是否确切（半监督？弱标注？）</p>
+<h4 id="理解数据"><a href="#理解数据" class="headerlink" title="理解数据"></a>理解数据</h4><p>AI算法项目相比<code>rule-driven</code>或<code>theory-driven</code>，更多的是<code>data-driven</code>，观察数据，从数据本身出发，与抽象与定义问题形成反馈，获得更多的有用信息。进行场景拆分、细化，问题转移（传感器、语言或视觉？）</p>
+<h4 id="反思数据"><a href="#反思数据" class="headerlink" title="反思数据"></a>反思数据</h4><p>理解数据在于基于当前问题吃透给定的数据。但在实际项目落地中，不仅仅是接受给定数据，要反思数据：当前数据是否足够，是否可获取其他辅助数据？数据是否可标准，标注是否确切（半监督？弱标注？）</p>
 <h4 id="工程pipeline的建立"><a href="#工程pipeline的建立" class="headerlink" title="工程pipeline的建立"></a>工程pipeline的建立</h4><p>利于快速迭代验证。</p>
 <h4 id="回溯与迭代"><a href="#回溯与迭代" class="headerlink" title="回溯与迭代"></a>回溯与迭代</h4><p>进一步定义问题，思考与优化，时间、空间、准确率等指标的trade off。</p>
 <h3 id="其他能力要求"><a href="#其他能力要求" class="headerlink" title="其他能力要求"></a>其他能力要求</h3><h4 id="论文阅读"><a href="#论文阅读" class="headerlink" title="论文阅读"></a>论文阅读</h4><p>思想的源泉，问题阻塞点解决的出路。</p>
@@ -544,12 +533,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">97k</span>
+    <span title="站点总字数">99k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:28</span>
+    <span title="站点阅读时长">1:30</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>

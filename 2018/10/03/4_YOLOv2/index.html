@@ -67,7 +67,7 @@
 <meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolo_grid.png">
 <meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov1_loss.jpg">
 <meta property="og:image" content="https://zheng-yuwei.github.io/images/YOLOv2/yolov1_2.png">
-<meta property="og:updated_time" content="2019-11-05T13:34:53.385Z">
+<meta property="og:updated_time" content="2019-12-03T07:55:24.128Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="YOLOv2">
 <meta name="twitter:description" content="对YOLOv2理解和复现（backbone并没用darknet19）的一点记录。">
@@ -269,7 +269,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-05 21:34:53" itemprop="dateModified" datetime="2019-11-05T21:34:53+08:00">2019-11-05</time>
+                <time title="修改时间：2019-12-03 15:55:24" itemprop="dateModified" datetime="2019-12-03T15:55:24+08:00">2019-12-03</time>
               </span>
             
           
@@ -291,7 +291,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>4.8k</span>
+              <span>5.6k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -301,7 +301,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>4 分钟</span>
+              <span>5 分钟</span>
             </span>
           
 
@@ -324,57 +324,40 @@
 </p>
 
 <blockquote>
-<p>YOLOv2将检测作为一个分类+回归问题：将图片分割为<script type="math/tex">S×S</script>个grid，
-每一个grid单元预测<script type="math/tex">B</script>个bounding box、置信度、<script type="math/tex">C</script>个类别概率，
-这些会被编码为一个<script type="math/tex">S \times S \times (B * (4+1+C))</script>的矩阵。</p>
+<p><code>YOLOv2</code>将检测作为一个分类+回归问题：将图片分割为<script type="math/tex">S×S</script>个<code>grid</code>，每一个<code>grid</code>单元预测<script type="math/tex">B</script>个<code>bounding box</code>、置信度、<script type="math/tex">C</script>个类别概率，这些会被编码为一个<script type="math/tex">S \times S \times (B * (4+1+C))</script>的矩阵。</p>
 </blockquote>
 <h3 id="YOLOv2整体网络"><a href="#YOLOv2整体网络" class="headerlink" title="YOLOv2整体网络"></a>YOLOv2整体网络</h3><p>主要可分为以下三个方面：</p>
 <ol>
-<li><p>backbone为全卷积网络FCN，整体网络降采样32倍，有利于多尺度训练（Multi-Scale Training）；</p>
+<li><p><code>backbone</code>为全卷积网络FCN，整体网络降采样32倍，有利于多尺度训练（Multi-Scale Training）；</p>
 </li>
-<li><p>使用leaky ReLU作为激活函数：</p>
+<li><p>使用<code>leaky ReLU</code>作为激活函数：</p>
 <script type="math/tex; mode=display">
 \Theta (x)=\left\{\begin{matrix}
 x & if\; x > 0\\
 0.1x & otherwise
 \end{matrix}\right.</script></li>
-<li><p>输出解码：backbone输出为<script type="math/tex">13 \times 13 \times (B*(4+1+C))</script>的三维矩阵。其中：</p>
+<li><p>输出解码：<code>backbone</code>输出为<script type="math/tex">13 \times 13 \times (B*(4+1+C))</script>的三维矩阵。其中：</p>
 <ul>
-<li><p>超参数<script type="math/tex">B</script>：每个grid的bounding boxes的数量；</p>
-</li>
-<li><p>类别数<script type="math/tex">C</script>（不包含背景，所有单类的话这个分支可以去掉，损失函数部分也对应去掉），
-每位数对应相应类别的概率预测<script type="math/tex">Pr(Class_{i}|Object)</script>（之所以要定义为<code>Object</code>的条件概率，
-是因为总损失函数里，只有当<code>Object</code>中心落到对应的grid中时，该grid才计算分类损失），
-故该类别预测向量<script type="math/tex">\overrightarrow{z}</script>可以通过softmax函数转化为[0,1]之间类别概率：</p>
-<script type="math/tex; mode=display">
-Pr(Class_{i}|Object)=\frac{e^{z_{i}}}{\sum_{j}^{C}e^{z_{j}}}</script><p>实现上，为了防止数值溢出，一般会减去最大值的操作<script type="math/tex">\overrightarrow{z}-max_{i}(z_{i})</script>。</p>
-</li>
-<li><p>4个bounding box对应的坐标信息：中心点及宽高<script type="math/tex">(x_{center}, y_{center}, w, h)</script>,
-考虑到模型训练过程的稳定性，不能像region proposal算法那样，不约束预测中心的位置：</p>
-<script type="math/tex; mode=display">
+<li>超参数<script type="math/tex">B</script>：每个<code>grid</code>的<code>bounding boxes</code>的数量；</li>
+<li>类别数<script type="math/tex">C</script>（不包含背景，所有单类的话这个分支可以去掉，损失函数部分也对应去掉），每位数对应相应类别的概率预测<script type="math/tex">Pr(Class_{i}|Object)</script>（之所以要定义为<code>Object</code>的条件概率，是因为总损失函数里，只有当<code>Object</code>中心落到对应的<code>grid</code>中时，该<code>grid</code>才计算分类损失），故该类别预测向量<script type="math/tex">\overrightarrow{z}</script>可以通过softmax函数转化为<script type="math/tex">[0,1]</script>之间类别概率：<script type="math/tex; mode=display">
+Pr(Class_{i}|Object)=\frac{e^{z_{i}}}{\sum_{j}^{C}e^{z_{j}}}</script>实现上，为了防止数值溢出，一般会减去最大值的操作<script type="math/tex">\overrightarrow{z}-max_{i}(z_{i})</script>。</li>
+<li>4个<code>bounding box</code>对应的坐标信息：中心点及宽高<script type="math/tex">(x_{center}, y_{center}, w, h)</script>,考虑到模型训练过程的稳定性，不能像<code>region proposal</code>算法那样，不约束预测中心的位置：<script type="math/tex; mode=display">
 \begin{eqnarray}
 & x = & (t_{a} * w_{a}) + x_{a} \\
 & y = & (t_{a} * h_{a}) + y_{a}
-\end{eqnarray}</script><p>并且YOLO把物体的检测任务根据物品中心分配到对应的grid去，所以理应把预测中心的位置限制在当前grid中，
-故提出了中心坐标<script type="math/tex">(b_{x}, b{y})</script>根据grid的左上角坐标<script type="math/tex">(c_{x}, c_{y})</script>的偏移进行预测，
-宽高的预测则是基于anchors进行比例伸缩：</p>
-<script type="math/tex; mode=display">
+\end{eqnarray}</script>并且YOLO把物体的检测任务根据物品中心分配到对应的<code>grid</code>去，所以理应把预测中心的位置限制在当前<code>grid</code>中，故提出了中心坐标<script type="math/tex">(b_{x}, b{y})</script>根据<code>grid</code>的左上角坐标<script type="math/tex">(c_{x}, c_{y})</script>的偏移进行预测，宽高的预测则是基于<code>anchors</code>进行比例伸缩：<script type="math/tex; mode=display">
 \begin{eqnarray}
 & b_{x} = & \sigma(t_{x}) + c_{x} \\
 & b_{y} = & \sigma(t_{y}) + c_{y} \\
 & b_{w} = & p_{w}e^{t_{w}} \\
 & b_{h} = & p_{h}e^{t_{h}}
 \end{eqnarray}</script></li>
-<li><p>1个IOU预测值：<script type="math/tex">Pr(Object) * IOU_{pred}^{truth}</script>，这里<script type="math/tex">Pr(Object)</script>指：
-只有当<code>Object</code>中心落到对应的grid中时，该grid才计算该预测值与实际IOU的损失，
-否则计算该预测值与0的损失。此时，预测值也约束为[0,1]之间：</p>
-<script type="math/tex; mode=display">
+<li>1个IOU预测值：<script type="math/tex">Pr(Object) * IOU_{pred}^{truth}</script>，这里<script type="math/tex">Pr(Object)</script>指：只有当<code>Object</code>中心落到对应的<code>grid</code>中时，该<code>grid</code>才计算该预测值与实际<code>IOU</code>的损失，否则计算该预测值与0的损失。此时，预测值也约束为<script type="math/tex">[0,1]</script>之间：<script type="math/tex; mode=display">
 Pr(Object) * IOU_{pred}^{truth} = \sigma(t_{o})</script></li>
 </ul>
 </li>
 </ol>
-<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>YOLO系列的精髓在于他的思想简单直接，使用的技巧也很纯粹。
-其中的损失函数部分，更是YOLO系列理解和实现中最重要的部分：</p>
+<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p><code>YOLO</code>系列的精髓在于他的思想简单直接，使用的技巧也很纯粹。其中的损失函数部分，更是<code>YOLO</code>系列理解和实现中最重要的部分：</p>
 <script type="math/tex; mode=display">
 \begin{matrix}
 L = \lambda_{coord}*(L_{xy} + L_{wh}) + L_{iou}^{obj} + \lambda_{noobj}*L_{iou}^{noobj} + L_{class} \\
@@ -385,16 +368,15 @@ L = \lambda_{coord}*(L_{xy} + L_{wh}) + L_{iou}^{obj} + \lambda_{noobj}*L_{iou}^
 & L_{iou}^{noobj} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{noobj}(C_{i}-\hat{C}_{i})^2 \\
 & L_{class} = & \sum_{i=0}^{S^2} I_{ij}^{obj} \sum_{c=class} (p_{i}(c)-\hat{p}_{i}(c))^2
 \end{eqnarray}
-\end{matrix}</script><p>上面的公式，比较难理解的地方在于：<script type="math/tex">I_{ij}^{obj}</script>和<script type="math/tex">I_{ij}^{noobj}</script>的规定、<script type="math/tex">\lambda_{...}</script>这些系数的选取。</p>
-<p>我们以输出矩阵为<script type="math/tex">7 \times 7 \times (5*(4+1+10))</script>的情况进行举例讲解：</p>
+\end{matrix}</script><p>上面的公式，只是<code>Darknet</code>损失函数的想法，实际代码和上面公式有出入（<code>公式9,10,11</code>计算IOU和类别概率损失是一致的）。在<code>Darknet</code>的源码中，<code>(x, y, w, h)</code>损失的计算为：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">float</span> tx = (truth.x*lw - i);</span><br><span class="line"><span class="keyword">float</span> ty = (truth.y*lh - j);</span><br><span class="line"><span class="keyword">float</span> tw = <span class="built_in">log</span>(truth.w*w / biases[<span class="number">2</span>*n]);</span><br><span class="line"><span class="keyword">float</span> th = <span class="built_in">log</span>(truth.h*h / biases[<span class="number">2</span>*n + <span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">delta[index + <span class="number">0</span>*stride] = scale * (tx - x[index + <span class="number">0</span>*stride]);</span><br><span class="line">delta[index + <span class="number">1</span>*stride] = scale * (ty - x[index + <span class="number">1</span>*stride]);</span><br><span class="line">delta[index + <span class="number">2</span>*stride] = scale * (tw - x[index + <span class="number">2</span>*stride]);</span><br><span class="line">delta[index + <span class="number">3</span>*stride] = scale * (th - x[index + <span class="number">3</span>*stride]);  <span class="comment">// 后面对delta做平方损失</span></span><br></pre></td></tr></table></figure>
+<p>其中，<code>scale = 2 - truth.w * truth.h</code>，<code>truth.w/h</code>是归一化后的宽/高，中心坐标<code>(x, y)</code>损失项的计算和上面<code>公式7</code>一致（除了<code>scale</code>），但<code>(w, h)</code>损失项的计算则有出入：</p>
+<script type="math/tex; mode=display">
+L_{wh} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} I_{ij}^{obj}[(\log{\frac{w_{i}}{w_{anchor,j}}}-\log{\frac{\hat{w}_{i}}{w_{anchor,j}}})^2 + (\log{\frac{h_{i}}{h_{anchor,j}}}-\log{\frac{\hat{h}_{i}}{h_{anchor,j}}})^2]</script><p>其实还有一个<code>scale</code>，提升对小目标的误差的敏感程度。</p>
+<h4 id="response-box的界定"><a href="#response-box的界定" class="headerlink" title="response box的界定"></a><code>response box</code>的界定</h4><p>比较难理解的地方在于：<script type="math/tex">I_{ij}^{obj}</script>和<script type="math/tex">I_{ij}^{noobj}</script>的规定、<script type="math/tex">\lambda_{...}</script>这些系数的选取。
+我们以输出矩阵为<script type="math/tex">7 \times 7 \times (5*(4+1+10))</script>的情况进行举例讲解：</p>
 <ul>
-<li><strong><script type="math/tex">I_{ij}^{obj}</script>的解释</strong>：
-如下图所示，原图<script type="math/tex">224 \times 224</script>的输入，经过<script type="math/tex">32</script>倍的下采样，得到<script type="math/tex">7 \times 7</script>的输出。
-YOLO系列算法中，将目标物体的检测任务，分配到输出层的对应grid中：原图目标检测框的中心点位置，
-落在<script type="math/tex">7 \times 7</script>的输出特征图中的第<script type="math/tex">i</script>个grid中，而这个grid的第<script type="math/tex">j</script>个anchor预测框与真实框的IOU最大，
-故第<script type="math/tex">i</script>个grid的第<script type="math/tex">j</script>个anchor预测框负责该物体的检测。
-也就是，<strong>目标物体中心点所在的grid中，<script type="math/tex">5</script>个候选框中与目标框IOU最大的预测框，才用来预测该目标候选框：
-此grid、此anchor对应公式中<script type="math/tex">I_{ij}^{obj}=1</script>的情况，其他情况<script type="math/tex">I_{ij}^{obj}=0</script></strong>。</li>
+<li><strong><script type="math/tex">I_{ij}^{obj}</script>的解释</strong>：如下图所示，原图<script type="math/tex">224 \times 224</script>的输入，经过<script type="math/tex">32</script>倍的下采样，得到<script type="math/tex">7 \times 7</script>的输出。YOLO系列算法中，将目标物体的检测任务，分配到输出层的对应<code>grid</code>中：原图目标检测框的中心点位置，落在<script type="math/tex">7 \times 7</script>的输出特征图中的第<script type="math/tex">i</script>个<code>grid</code>中，而<strong>这个<code>grid</code>的第<script type="math/tex">j</script>个<code>anchor</code>预测框（<code>Darknet</code>源码实现是预定义<code>anchor box</code>）与真实框的IOU最大</strong>，故第<script type="math/tex">i</script>个<code>grid</code>的第<script type="math/tex">j</script>个anchor预测框负责该物体的检测。也就是，<strong>目标物体中心点所在的<code>grid</code>中，<script type="math/tex">5</script>个候选框中与目标框IOU最大的预测框/预定义<code>anchor box</code>，才用来预测该目标候选框：此grid、此anchor对应公式中<script type="math/tex">I_{ij}^{obj}=1</script>的情况，其他情况<script type="math/tex">I_{ij}^{obj}=0</script></strong>。</li>
 </ul>
 <p align="center">
     <img src="/images/YOLOv2/yolo_grid.png">
@@ -404,24 +386,11 @@ YOLO系列算法中，将目标物体的检测任务，分配到输出层的对�
 <p>这个图来自<a href="https://www.cnblogs.com/makefile/p/YOLOv3.html" target="_blank" rel="noopener">目标检测网络之 YOLOv3</a>，</p>
 </blockquote>
 <ul>
-<li><p><strong><script type="math/tex">I_{ij}^{noobj}</script>的解释</strong>：
-上面解释了<script type="math/tex">I_{ij}^{obj}</script>的情况，并<strong>不是<script type="math/tex">I_{ij}^{obj}=0</script>就是<script type="math/tex">I_{ij}^{noobj}=1</script></strong>，
-<strong>只有预测框与所有的真实目标框的IOU都小于一定阈值
-（<a href="https://github.com/pjreddie/darknet/blob/master/cfg/yolo9000.cfg" target="_blank" rel="noopener">darknet YOLO9000</a> thresh是0.6,
-<a href="https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg" target="_blank" rel="noopener">darknet YOLOv3</a> ignore thresh 是0.7），
-才是<script type="math/tex">I_{ij}^{noobj}=1</script>的情况</strong>，
-此时我们才认为该grid、该anchor的预测框没有任何目标存在，为background区域，需要计算背景IOU损失！
-而大于这个阈值而又不是<script type="math/tex">I_{ij}^{obj}=1</script>的anchor，是不用计算损失的。</p>
+<li><p><strong><script type="math/tex">I_{ij}^{noobj}</script>的解释</strong>：上面解释了<script type="math/tex">I_{ij}^{obj}</script>的情况，并<strong>不是<script type="math/tex">I_{ij}^{obj}=0</script>就是<script type="math/tex">I_{ij}^{noobj}=1</script></strong>，<strong>只有预测框与所有的真实目标框的IOU都小于一定阈值（<a href="https://github.com/pjreddie/darknet/blob/master/cfg/yolo9000.cfg" target="_blank" rel="noopener">darknet YOLO9000</a> thresh是0.6,<a href="https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg" target="_blank" rel="noopener">darknet YOLOv3</a> ignore thresh 是0.7），才是<script type="math/tex">I_{ij}^{noobj}=1</script>的情况</strong>，此时我们才认为该grid、该anchor的预测框没有任何目标存在，为background区域，需要计算背景IOU损失！而大于这个阈值而又不是<script type="math/tex">I_{ij}^{obj}=1</script>的anchor，是不用计算损失的。</p>
 </li>
-<li><p>没有目标存在的grid、anchor，需要使其预测IOU趋于0，也就是<script type="math/tex">L_{iou}^{noobj}</script>损失部分，
-而有目标的grid、anchor，则需要其预测的IOU趋于1、预测的物品类别概率正确、预测框位置准确，
-也就是对应的<script type="math/tex">L_{iou}^{obj}</script>、<script type="math/tex">L_{class}</script>、<script type="math/tex">(L_{xy} + L_{wh})</script>损失部分。
-作者认为，背景区域比较多，所以背景区域带来的IOU损失权重应该比较小：<script type="math/tex">\lambda_{noobj}=0.5</script>；
-而目标区域的位置误差只有4维，而物品类别误差有20/80维，那么<script type="math/tex">\lambda_{coord}=5</script>设置大一些。
-（这是可以调参的部分；同时，复现的人会将focal loss用在IOU的损失函数这块上，因为只有这块有背景和前景的失衡情况）</p>
+<li><p>没有目标存在的grid、anchor，需要使其预测IOU趋于0，也就是<script type="math/tex">L_{iou}^{noobj}</script>损失部分，而有目标的grid、anchor，则需要其预测的IOU趋于1、预测的物品类别概率正确、预测框位置准确，也就是对应的<script type="math/tex">L_{iou}^{obj}</script>、<script type="math/tex">L_{class}</script>、<script type="math/tex">(L_{xy} + L_{wh})</script>损失部分。作者认为，背景区域比较多，所以背景区域带来的IOU损失权重应该比较小：<script type="math/tex">\lambda_{noobj}=0.5</script>；而目标区域的位置误差只有4维，而物品类别误差有20/80维，那么<script type="math/tex">\lambda_{coord}=5</script>设置大一些。（这是可以调参的部分；同时，复现的人会将focal loss用在IOU的损失函数这块上，因为只有这块有背景和前景的失衡情况）</p>
 </li>
-<li><p>损失函数里对宽高进行了开方，是为了缓和大小不同的box预测时的偏移差异：
-相比于大bbox预测偏一点，小box预测偏一点更不能忍受（这里用相对尺度<script type="math/tex">1-\frac{\hat{w}}{w}</script>会不会更好一些？）。</p>
+<li><p>损失函数里对宽高进行了开方，是为了缓和大小不同的box预测时的偏移差异：相比于大bbox预测偏一点，小box预测偏一点更不能忍受（这里用相对尺度<script type="math/tex">1-\frac{\hat{w}}{w}</script>会不会更好一些？）。</p>
 </li>
 </ul>
 <p><strong>重要的额外说明</strong>：</p>
@@ -445,21 +414,23 @@ YOLO系列算法中，将目标物体的检测任务，分配到输出层的对�
 <li>先用ImageNet 224*224进行分类预训练backbone；</li>
 <li>再用ImageNet 448*448进行fine-tuning训练backbone；</li>
 <li>最后切换为检测任务，fine-tuning整体模型；</li>
-<li>前期12800张图片的损失函数，增加损失项：<script type="math/tex; mode=display">
+<li>前期12800张图片的损失函数，增加损失项：</li>
+</ol>
+<script type="math/tex; mode=display">
 \begin{matrix}
 L = \lambda_{prior}*L_{xy} + \lambda_{prior}*L_{wh} \\
 \begin{eqnarray}
 & L_{xy} = & \sum_{i=0}^{S^2} \sum_{j=0}^{B} [(x_{i}-\hat{x}_{i})^2 + (y_{i}-\hat{y}_{i})^2] \\
 & L_{wh} = & \lambda_{coord} \sum_{i=0}^{S^2} \sum_{j=0}^{B} [(\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^2 + (\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^2] \\
 \end{eqnarray}
-\end{matrix}</script>其中，<script type="math/tex">(x_{i}, y_{i}, w_{i}, h_{i})</script>是预测框<script type="math/tex">(\hat{x}_{i}, \hat{y}_{i}, \hat{w}_{i}, \hat{h}_{i})</script>的
-先验框，<script type="math/tex">(x_{i}, y_{i})</script>是中心点；以此来使得前期所有的预测框往先验框大小靠近，往grid中心点移动。
-<strong>稳定前期训练，且有利于后期预测框的学习（预测位置在0.5左右，刚好是sigmoid梯度最大的地方）</strong>。</li>
-</ol>
+\end{matrix}</script><p>其中，<script type="math/tex">(x_{i}, y_{i}, w_{i}, h_{i})</script>是预测框<script type="math/tex">(\hat{x}_{i}, \hat{y}_{i}, \hat{w}_{i}, \hat{h}_{i})</script>的先验框，<script type="math/tex">(x_{i}, y_{i})</script>是中心点；以此来使得前期所有的预测框往先验框大小靠近，往grid中心点移动。<strong>稳定前期训练，且有利于后期预测框的学习（预测位置在0.5左右，刚好是sigmoid梯度最大的地方）</strong>。</p>
 <p><strong>测试</strong>：</p>
 <ol>
-<li>测试时，计算指定类别的置信度：<script type="math/tex; mode=display">
-Pr(Class_{i}|Object) * Pr(Object) * IOU_{pred}^{truth} = Pr(Class_{i}) * IOU_{pred}^{truth}</script>大于一定阈值的话，则认为检测到目标<script type="math/tex">Class_{i}</script>。</li>
+<li>测试时，计算指定类别的置信度：</li>
+</ol>
+<script type="math/tex; mode=display">
+Pr(Class_{i}|Object) * Pr(Object) * IOU_{pred}^{truth} = Pr(Class_{i}) * IOU_{pred}^{truth}</script><p>大于一定阈值的话，则认为检测到目标<script type="math/tex">Class_{i}</script>。</p>
+<ol>
 <li>对所有grid进行如上计算及阈值过滤，然后进行NMS，得到最终检测结果。</li>
 </ol>
 <h3 id="YOLOv2周边"><a href="#YOLOv2周边" class="headerlink" title="YOLOv2周边"></a>YOLOv2周边</h3><p>包含聚类anchors、YOLOv2的局限、单类检测的讨论。</p>
@@ -592,7 +563,7 @@ Pr(Class_{i}|Object) * Pr(Object) * IOU_{pred}^{truth} = Pr(Class_{i}) * IOU_{pr
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2整体网络"><span class="nav-number">1.</span> <span class="nav-text">YOLOv2整体网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#损失函数"><span class="nav-number">2.</span> <span class="nav-text">损失函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2的训练与测试"><span class="nav-number">3.</span> <span class="nav-text">YOLOv2的训练与测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2周边"><span class="nav-number">4.</span> <span class="nav-text">YOLOv2周边</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#聚类anchors"><span class="nav-number">4.1.</span> <span class="nav-text">聚类anchors</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#YOLOv2的局限"><span class="nav-number">4.2.</span> <span class="nav-text">YOLOv2的局限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单类检测"><span class="nav-number">4.3.</span> <span class="nav-text">单类检测</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现代码"><span class="nav-number">5.</span> <span class="nav-text">实现代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2整体网络"><span class="nav-number">1.</span> <span class="nav-text">YOLOv2整体网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#损失函数"><span class="nav-number">2.</span> <span class="nav-text">损失函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#response-box的界定"><span class="nav-number">2.1.</span> <span class="nav-text">response box的界定</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2的训练与测试"><span class="nav-number">3.</span> <span class="nav-text">YOLOv2的训练与测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YOLOv2周边"><span class="nav-number">4.</span> <span class="nav-text">YOLOv2周边</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#聚类anchors"><span class="nav-number">4.1.</span> <span class="nav-text">聚类anchors</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#YOLOv2的局限"><span class="nav-number">4.2.</span> <span class="nav-text">YOLOv2的局限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单类检测"><span class="nav-number">4.3.</span> <span class="nav-text">单类检测</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现代码"><span class="nav-number">5.</span> <span class="nav-text">实现代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
         
       </div>
       <!--/noindex-->
@@ -679,12 +650,12 @@ Pr(Class_{i}|Object) * Pr(Object) * IOU_{pred}^{truth} = Pr(Class_{i}) * IOU_{pr
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">97k</span>
+    <span title="站点总字数">99k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:28</span>
+    <span title="站点阅读时长">1:30</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
   <span class="post-meta-divider">|</span>
